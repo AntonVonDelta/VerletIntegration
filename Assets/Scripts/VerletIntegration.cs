@@ -33,7 +33,7 @@ public class VerletIntegration : MonoBehaviour {
 
     public GameObject player;
     public GameObject prefab;
-    public Vector3 gravity = Vector3.up * 0.05f;
+    public Vector3 gravity = Vector3.up * 0.01f;
     public float friction = 0.99f;
 
     List<GameObject> instantiated = new List<GameObject>();
@@ -50,35 +50,35 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        simulationPoints.Add(new VerletPoint(new Vector3(2, 1, 0.5f), true));
-        simulationPoints.Add(new VerletPoint(new Vector3(13, 2, 1)));
-        simulationPoints.Add(new VerletPoint(new Vector3(2, 5, 7)));
-        simulationPoints.Add(new VerletPoint(new Vector3(5.2f, 4, 1.3f)));
-
-        ConnectPointsByLines(0, 3, 1);
-        constraintLines.Add(new RigidLine(3, 0, 1));
-        constraintLines.Add(new RigidLine(0, 2, 1));
-
         //simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
         //simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
         //simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
         //simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
 
-        //// Another branch
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
+        //ConnectPointsByLines(0, 3, 1);
+        //constraintLines.Add(new RigidLine(3, 0, 1));
+        //constraintLines.Add(new RigidLine(0, 2, 1));
+
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
+
+        // Another branch
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
 
 
-        //ConnectPointsByLines(0, 5, 1);
-        //ConnectPointsByLines(6, 8, 1.5f);
+        ConnectPointsByLines(0, 5, 1);
+        ConnectPointsByLines(6, 8, 1f);
 
-        //// Connect the two chains
+        // Connect the two chains
         //constraintLines.Add(new RigidLine(1, 6, 1));
 
-        //CrossConnectTwoChains(1, 5, 6, 8, 2.5f);
+        CrossConnectTwoChains(1, 5, 6, 8, 1f);
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
@@ -88,11 +88,11 @@ public class VerletIntegration : MonoBehaviour {
     void Update() {
         UpdatePoints();
 
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             UpdateSticks();
             ApplyConstraints();
         }
-        
+
         UpdateAttachedObjects();
 
         //for (int i = 0; i < instantiated.Count; i++) {
@@ -123,7 +123,7 @@ public class VerletIntegration : MonoBehaviour {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(gizmoPos, 0.2f);
 
-        for(int i = 0; i < constraintLines.Count; i++) {
+        for (int i = 0; i < constraintLines.Count; i++) {
             RigidLine line = constraintLines[i];
             VerletPoint p1 = simulationPoints[line.pIndex1];
             VerletPoint p2 = simulationPoints[line.pIndex2];
@@ -168,11 +168,10 @@ public class VerletIntegration : MonoBehaviour {
                 // We separate them on some random axis to avoid symmetries in the visualization
                 Vector3 separationAxis = Random.insideUnitSphere.normalized;
 
-                // By how much the line stretched
-                // We are using an unit vector here
-                float extensionPercent = (line.distance - 1) / 1;
-
-                correctionPerAxis = separationAxis * extensionPercent;
+                // We multiply by minus one because we expect normaly the correctionAxis to be negative
+                // and this is taken into account when correcting each point as p1 is substracted instead of adding
+                // However visually we are moving the p1 point to the right and p2 to the left when p1<p2
+                correctionPerAxis = separationAxis * (-line.distance);
             } else {
                 // By how much the line stretched
                 float extensionPercent = (line.distance - currentDistance) / currentDistance;
@@ -185,11 +184,11 @@ public class VerletIntegration : MonoBehaviour {
             if (p1.locked && p2.locked) continue;
             if (p1.locked) {
                 p2.pos += correctionPerAxis;
-            }else if (p2.locked) {
+            } else if (p2.locked) {
                 p1.pos -= correctionPerAxis;
             } else {
-                p1.pos -= correctionPerAxis/2;
-                p2.pos += correctionPerAxis/2;
+                p1.pos -= correctionPerAxis / 2;
+                p2.pos += correctionPerAxis / 2;
             }
 
             // Update results
@@ -216,9 +215,21 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
 
-    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance) {
-        for (int i = 0; i < Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2) + 1; i++) {
+    /// <summary>
+    /// Connect two chains starting and ending at the given indexes
+    /// Cross1 controls whether to insert a diagonal line from first to second chain to form a rigid structure
+    /// Cross2 controls the other direction. Together they make an X inside a square
+    /// </summary>
+    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, bool cross1 = true, bool cross2 = true) {
+        int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
+        for (int i = 0; i < maxIndexOffset + 1; i++) {
             constraintLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
+            if (cross1 && i != maxIndexOffset) {
+                constraintLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, distance * Mathf.Sqrt(2)));
+            }
+            if (cross2 && i != maxIndexOffset) {
+                constraintLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, distance * Mathf.Sqrt(2)));
+            }
         }
     }
     private void ConnectPointsByLines(int startIndex, int finalIndex, float distance) {
