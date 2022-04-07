@@ -36,12 +36,16 @@ public class PlantGenerator {
 
                         Branch newBranch = new Branch(uniqueIndex, newBranchNodes);
                         uniqueIndex += branch.GetNodeCount();
-                        currentBranch.AddChildBranch(newBranch);
+                        currentBranch.AddChildBranch(j, newBranch);
+
+                        newBranches.Enqueue(newBranch);
                     }
                 }
             }
 
 
+            pendingBranches = newBranches;
+            newBranches = new Queue<Branch>();
         }
 
     }
