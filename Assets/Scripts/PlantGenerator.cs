@@ -41,7 +41,7 @@ public class PlantGenerator {
                     float nodeProbability = Mathf.Lerp(0, 9, (float)j / (currentBranch.GetNodeCount() - 1));
 
                     if (rand < nodeProbability) {
-                        int newBranchNodeCount = 2;// Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
+                        int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         if (newBranchNodeCount == 0) continue;
 
                         float x = Mathf.Sqrt(1 * 1 + branchLinearDistanceFactor * branchLinearDistanceFactor);
@@ -96,12 +96,12 @@ public class PlantGenerator {
 
             rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
 
-            if (startIndex2 + i + 1 <= finalIndex2) {
-                float diagonalDistance = Mathf.Sqrt(1 * 1 + Distance(distance, linearIncreaseFactor, i + 1));
+            if (i != maxIndexOffset) {
+                float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i + 1), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, diagonalDistance));
             }
-            if (startIndex1 + i + 1 <= finalIndex1) {
-                float diagonalDistance = Mathf.Sqrt(1 * 1 + Distance(distance, linearIncreaseFactor, i));
+            if (i != maxIndexOffset) {
+                float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, diagonalDistance));
             }
         }
