@@ -16,12 +16,16 @@ public class PlantGenerator {
     }
 
     public void Generate() {
-        Branch branch = new Branch(uniqueIndex, mainBranchSize);
+        Branch mainBranch = new Branch(uniqueIndex, mainBranchSize);
         Queue<Branch> pendingBranches = new Queue<Branch>();
         Queue<Branch> newBranches = new Queue<Branch>();
 
-        pendingBranches.Enqueue(branch);
-        uniqueIndex += branch.GetNodeCount();
+        pendingBranches.Enqueue(mainBranch);
+        uniqueIndex += mainBranch.GetNodeCount();
+
+        // Add points and constraint lines
+        simulationPoints.AddRange(mainBranch.GetVerletPoints());
+        rigidLines.AddRange(mainBranch.GetRigidLines());
 
         for (int i = 0; i < maxBranching; i++) {
             while (pendingBranches.Count != 0) {
@@ -36,7 +40,7 @@ public class PlantGenerator {
                         if (newBranchNodes == 0) continue;
 
                         Branch newBranch = new Branch(uniqueIndex, newBranchNodes);
-                        uniqueIndex += branch.GetNodeCount();
+                        uniqueIndex += newBranchNodes;
                         currentBranch.AddChildBranch(j, newBranch);
 
                         newBranches.Enqueue(newBranch);
