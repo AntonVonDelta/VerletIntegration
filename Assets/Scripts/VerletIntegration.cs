@@ -33,24 +33,31 @@ public class VerletIntegration : MonoBehaviour {
 
     public GameObject player;
     public GameObject prefab;
+
+    [Header("Physics settings")]
     public Vector3 gravity = Vector3.up * 0.01f;
     public float friction = 0.99f;
 
-    List<GameObject> instantiated = new List<GameObject>();
-    List<VerletPoint> simulationPoints = new List<VerletPoint>();
-    List<RigidLine> rigidLines = new List<RigidLine>();
+    [Header("Points settings")]
+    public int mainBranchPoints = 20;
+    public int maxBranchLevels = 4;
+    public int branchItemCountHalvingRatio = 2;  // By what amount to divide the number of points for the next branch
+    public float branchLinearDistanceFactor = 0.2f;     // By what amount to increase the distance of side branches relative to their parent
 
     private Rigidbody playerRb;
     private Vector3 lastPos;
     private Vector3 gizmoPos = Vector3.zero;
 
+    private List<GameObject> instantiated = new List<GameObject>();
+    private List<VerletPoint> simulationPoints = new List<VerletPoint>();
+    private List<RigidLine> rigidLines = new List<RigidLine>();
 
 
     void Start() {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        PlantGenerator plant = new PlantGenerator(8, 2);
+        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, branchLinearDistanceFactor);
         plant.Generate();
         plant.LockPoint(0, new Vector3(0, 1, 0));
 
