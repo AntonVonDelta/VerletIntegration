@@ -46,7 +46,7 @@ public class PlantGenerator {
                     if (rand < nodeProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
-
+                                                
                         // Exclude 0 or 1 item branches
                         if (newBranchNodeCount <= 1) continue;
 
@@ -76,7 +76,9 @@ public class PlantGenerator {
 
                         CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
-                        break;
+
+                        // Move iterator to next possible branching position
+                        j += newBranchNodeCount-1;
                     }
                 }
             }

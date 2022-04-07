@@ -37,6 +37,7 @@ public class VerletIntegration : MonoBehaviour {
     [Header("Physics settings")]
     public Vector3 gravity = Vector3.up * 0.01f;
     public float friction = 0.99f;
+    public float constantJitter = 0.05f;
 
     [Header("Points settings")]
     public int mainBranchPoints = 20;
@@ -128,7 +129,7 @@ public class VerletIntegration : MonoBehaviour {
     private void UpdatePoints() {
         for (int i = 0; i < simulationPoints.Count; i++) {
             VerletPoint point = simulationPoints[i];
-            Vector3 dVec = (point.pos - point.oldPos) * friction;
+            Vector3 dVec = (point.pos - point.oldPos) * friction + Random.insideUnitSphere.normalized * constantJitter;
 
             if (point.locked) continue;
 
