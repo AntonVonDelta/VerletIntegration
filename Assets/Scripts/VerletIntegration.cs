@@ -43,6 +43,7 @@ public class VerletIntegration : MonoBehaviour {
     public int maxBranchLevels = 4;
     public int branchItemCountHalvingRatio = 2;  // By what amount to divide the number of points for the next branch
     public float branchLinearDistanceFactor = 0.2f;     // By what amount to increase the distance of side branches relative to their parent
+    public float distanceAwayFromParentBranch = 1;
 
     private Rigidbody playerRb;
     private Vector3 lastPos;
@@ -57,7 +58,7 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, branchLinearDistanceFactor);
+        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, branchLinearDistanceFactor, distanceAwayFromParentBranch);
         plant.Generate();
         plant.LockPoint(0, new Vector3(0, 1, 0));
 

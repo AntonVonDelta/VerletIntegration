@@ -10,13 +10,16 @@ public class PlantGenerator {
     private int maxBranching;
     private float halvingRatio;
     private float branchLinearDistanceFactor;
+    public float distanceAwayFromParentBranch;
+
     private int uniqueIndex = 0;
 
-    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor) {
+    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor,float distanceAwayFromParentBranch) {
         this.mainBranchSize = mainBranchSize;
         this.maxBranching = maxBranching;
         this.halvingRatio = halvingRatio;
         this.branchLinearDistanceFactor = branchLinearDistanceFactor;
+        this.distanceAwayFromParentBranch = distanceAwayFromParentBranch;
     }
 
     public void Generate() {
@@ -42,11 +45,12 @@ public class PlantGenerator {
 
                     if (rand < nodeProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
-                        if (newBranchNodeCount == 0) continue;
+                        float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
 
-                        float x = Mathf.Sqrt(1 * 1 + branchLinearDistanceFactor * branchLinearDistanceFactor);
+                        // Exclude 0 or 1 item branches
+                        if (newBranchNodeCount <= 1) continue;
 
-                        Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, x);
+                        Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
                         currentBranch.AddChildBranch(j, newBranch);
 
@@ -55,9 +59,22 @@ public class PlantGenerator {
                         // Add points and constraint lines
                         simulationPoints.AddRange(newBranch.GetVerletPoints());
                         rigidLines.AddRange(newBranch.GetRigidLines());
-                        CrossConnectTwoChains(currentBranch, j, newBranch, 1f * Mathf.Sqrt(2), branchLinearDistanceFactor);
+                        CrossConnectTwoChains(currentBranch, j, newBranch, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
-                        //return;
+
+                        // Create symetrical branch
+                        Branch newBranch2 = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
+                        uniqueIndex += newBranchNodeCount;
+                        currentBranch.AddChildBranch(j, newBranch2);
+
+                        newBranches.Enqueue(newBranch2);
+
+                        // Add points and constraint lines
+                        simulationPoints.AddRange(newBranch2.GetVerletPoints());
+                        rigidLines.AddRange(newBranch2.GetRigidLines());
+                        CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+
+                        CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
                     }
                 }
             }
@@ -89,19 +106,19 @@ public class PlantGenerator {
     /// Cross1 controls whether to insert a diagonal line from first to second chain to form a rigid structure
     /// Cross2 controls the other direction. Together they make an X inside a square
     /// </summary>
-    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, float linearIncreaseFactor) {
+    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, float distanceOnfirstBranch, float linearIncreaseFactor) {
         int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
         for (int i = 0; i < maxIndexOffset + 1; i++) {
             float adjustedDistance = Distance(distance, linearIncreaseFactor, i);
 
             rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
 
-            if (startIndex2 + i + 1<= finalIndex2) {
-                float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i + 1), 2));
+            if (startIndex2 + i + 1 <= finalIndex2) {
+                float diagonalDistance = Mathf.Sqrt(distanceOnfirstBranch * distanceOnfirstBranch + Mathf.Pow(Distance(distance, linearIncreaseFactor, i + 1), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, diagonalDistance));
             }
             if (startIndex1 + i + 1 <= finalIndex1) {
-                float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i), 2));
+                float diagonalDistance = Mathf.Sqrt(distanceOnfirstBranch * distanceOnfirstBranch + Mathf.Pow(Distance(distance, linearIncreaseFactor, i), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, diagonalDistance));
             }
         }
@@ -116,6 +133,23 @@ public class PlantGenerator {
     private void CrossConnectTwoChains(Branch firstBranch, int relativeStartingIndex, Branch secondBranch, float distance, float linearIncreaseFactor) {
         CrossConnectTwoChains(firstBranch.GetStartingNodeIndex() + relativeStartingIndex, firstBranch.GetStartingNodeIndex() + firstBranch.GetNodeCount() - 1,
             secondBranch.GetStartingNodeIndex(), secondBranch.GetStartingNodeIndex() + secondBranch.GetNodeCount() - 1,
-            distance, linearIncreaseFactor);
+            distance, firstBranch.GetDistance(), linearIncreaseFactor);
+
+    }
+
+    private void CrossConnectTwoSymetricalChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, float distanceOnfirstBranch, float linearIncreaseFactor) {
+        int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
+        for (int i = 0; i < maxIndexOffset + 1; i++) {
+            float adjustedDistance = 2*Distance(distance, linearIncreaseFactor, i);
+
+            rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
+
+        }
+    }
+    private void CrossConnectTwoSymetricalChains(Branch firstBranch, Branch secondBranch, float distance, float linearIncreaseFactor) {
+        CrossConnectTwoSymetricalChains(firstBranch.GetStartingNodeIndex(), firstBranch.GetStartingNodeIndex() + firstBranch.GetNodeCount() - 1,
+            secondBranch.GetStartingNodeIndex(), secondBranch.GetStartingNodeIndex() + secondBranch.GetNodeCount() - 1,
+            distance, firstBranch.GetDistance(), linearIncreaseFactor);
+
     }
 }

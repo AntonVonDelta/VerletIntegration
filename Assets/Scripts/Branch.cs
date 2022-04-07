@@ -13,9 +13,11 @@ public class Branch {
     private List<Attachment> childBranches = new List<Attachment>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
     private int startingNodeIndex = -1;
+    private float distance;
 
     public Branch(int startingNodeIndex, int nodes, float distance=1f) {
         this.startingNodeIndex = startingNodeIndex;
+        this.distance = distance;
 
         CreateVerletPoints(nodes);
         ConnectPointsByLines(nodes, distance);
@@ -31,6 +33,9 @@ public class Branch {
 
     public int GetNodeCount() {
         return simulationPoints.Count;
+    }
+    public float GetDistance() {
+        return distance;
     }
 
     public List<Attachment> GetChildBranches() {
