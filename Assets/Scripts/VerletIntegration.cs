@@ -50,26 +50,35 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(2, 1, 0.5f), true));
+        simulationPoints.Add(new VerletPoint(new Vector3(13, 2, 1)));
+        simulationPoints.Add(new VerletPoint(new Vector3(2, 5, 7)));
+        simulationPoints.Add(new VerletPoint(new Vector3(5.2f, 4, 1.3f)));
 
-        // Another branch
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
+        ConnectPointsByLines(0, 3, 1);
+        constraintLines.Add(new RigidLine(3, 0, 1));
+        constraintLines.Add(new RigidLine(0, 2, 1));
+
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
+
+        //// Another branch
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
+        //simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
 
 
-        ConnectPointsByLines(0, 5, 1);
-        ConnectPointsByLines(6, 8, 1);
+        //ConnectPointsByLines(0, 5, 1);
+        //ConnectPointsByLines(6, 8, 1.5f);
 
-        // Connect the two chains
-        constraintLines.Add(new RigidLine(1, 5, 1));
+        //// Connect the two chains
+        //constraintLines.Add(new RigidLine(1, 6, 1));
 
-        CrossConnectTwoChains(0, 5, 6, 8, 2.5f);
+        //CrossConnectTwoChains(1, 5, 6, 8, 2.5f);
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
@@ -78,10 +87,12 @@ public class VerletIntegration : MonoBehaviour {
 
     void Update() {
         UpdatePoints();
-        UpdateSticks();
-        ApplyConstraints();
 
-
+        for(int i = 0; i < 5; i++) {
+            UpdateSticks();
+            ApplyConstraints();
+        }
+        
         UpdateAttachedObjects();
 
         //for (int i = 0; i < instantiated.Count; i++) {
@@ -111,6 +122,13 @@ public class VerletIntegration : MonoBehaviour {
     private void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(gizmoPos, 0.2f);
+
+        for(int i = 0; i < constraintLines.Count; i++) {
+            RigidLine line = constraintLines[i];
+            VerletPoint p1 = simulationPoints[line.pIndex1];
+            VerletPoint p2 = simulationPoints[line.pIndex2];
+            Gizmos.DrawLine(p1.pos, p2.pos);
+        }
     }
 
     private void OnTriggerEnter(Collider other) {
@@ -143,20 +161,40 @@ public class VerletIntegration : MonoBehaviour {
 
             float currentDistance = Vector3.Distance(p1.pos, p2.pos);
             Vector3 dPos = p2.pos - p1.pos;
+            Vector3 correctionPerAxis;
 
-            // By how much the line stretched
-            float extensionPercent = (line.distance - currentDistance) / currentDistance;
+            // Edge case when two points are overlapping
+            if (currentDistance < 0.001f) {
+                // We separate them on some random axis to avoid symmetries in the visualization
+                Vector3 separationAxis = Random.insideUnitSphere.normalized;
 
-            // Calculate the extension per component axis
-            Vector3 correctionPerAxis = dPos * extensionPercent / 2;
+                // By how much the line stretched
+                // We are using an unit vector here
+                float extensionPercent = (line.distance - 1) / 1;
+
+                correctionPerAxis = separationAxis * extensionPercent;
+            } else {
+                // By how much the line stretched
+                float extensionPercent = (line.distance - currentDistance) / currentDistance;
+
+                // Calculate the extension per component axis
+                correctionPerAxis = dPos * extensionPercent;
+            }
 
             // Correct each point
-            p1.pos -= correctionPerAxis;
-            p2.pos += correctionPerAxis;
+            if (p1.locked && p2.locked) continue;
+            if (p1.locked) {
+                p2.pos += correctionPerAxis;
+            }else if (p2.locked) {
+                p1.pos -= correctionPerAxis;
+            } else {
+                p1.pos -= correctionPerAxis/2;
+                p2.pos += correctionPerAxis/2;
+            }
 
             // Update results
-            if (!p1.locked) simulationPoints[line.pIndex1] = p1;
-            if (!p2.locked) simulationPoints[line.pIndex2] = p2;
+            simulationPoints[line.pIndex1] = p1;
+            simulationPoints[line.pIndex2] = p2;
         }
     }
 
