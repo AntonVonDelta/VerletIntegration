@@ -75,6 +75,8 @@ public class PlantGenerator {
                         CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
                         CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+
+                        break;
                     }
                 }
             }
