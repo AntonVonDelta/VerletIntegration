@@ -55,7 +55,7 @@ public class VerletIntegration : MonoBehaviour {
     private List<GameObject> lineRenderersParents = new List<GameObject>();
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
-    private List<Vector2Int> branchPointsInterval;
+    private List<int[]> branchPointsInterval;
 
     void Start() {
         playerRb = player.GetComponent<Rigidbody>();
@@ -71,7 +71,9 @@ public class VerletIntegration : MonoBehaviour {
 
         // Create line renderes for each branch
         for (int i = 0; i < branchPointsInterval.Count; i++) {
-            lineRenderersParents.Add(Instantiate(renderPrefab));
+            GameObject newRenderObject = Instantiate(renderPrefab);
+            newRenderObject.GetComponent<LineRenderer>().positionCount = branchPointsInterval[i].Length;
+            lineRenderersParents.Add(newRenderObject);
         }
 
         for (int i = 0; i < simulationPoints.Count; i++) {
@@ -94,8 +96,8 @@ public class VerletIntegration : MonoBehaviour {
         for (int i = 0; i < lineRenderersParents.Count; i++) {
             LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
 
-            for (int j = 0; j < branchPointsInterval[i].y - branchPointsInterval[i].x; j++) {
-                renderer.SetPosition(j, simulationPoints[j + branchPointsInterval[i].x].pos);
+            for (int j = 0; j < branchPointsInterval[i].Length; j++) {
+                renderer.SetPosition(j, simulationPoints[branchPointsInterval[i][j]].pos);
             }
         }
 

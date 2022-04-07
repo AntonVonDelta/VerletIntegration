@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Branch;
 using static VerletIntegration;
 
 public class PlantGenerator {
@@ -8,7 +9,7 @@ public class PlantGenerator {
     private List<RigidLine> rigidLines = new List<RigidLine>();
 
     // This stores the interval of the indexes of points of each branch represented in the main array simulationPoints
-    private List<Vector2Int> branchPointsInterval = new List<Vector2Int>();
+    private List<int[]> branchPointsInterval = new List<int[]>();
 
     private int mainBranchSize;
     private int maxBranching;
@@ -56,9 +57,9 @@ public class PlantGenerator {
                         if (newBranchNodeCount <= 1) continue;
 
                         Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
-                        branchPointsInterval.Add(new Vector2Int(uniqueIndex, uniqueIndex + newBranchNodeCount));
                         uniqueIndex += newBranchNodeCount;
-                        currentBranch.AddChildBranch(j, newBranch);
+                        Attachment newAttachment = currentBranch.AddChildBranch(j, newBranch);
+                        AddBranchPointsIndexes(newAttachment);
 
                         newBranches.Enqueue(newBranch);
 
@@ -71,7 +72,8 @@ public class PlantGenerator {
                         // Create symetrical branch
                         Branch newBranch2 = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
-                        currentBranch.AddChildBranch(j, newBranch2);
+                        newAttachment = currentBranch.AddChildBranch(j, newBranch2);
+                        AddBranchPointsIndexes(newAttachment);
 
                         newBranches.Enqueue(newBranch2);
 
@@ -111,7 +113,7 @@ public class PlantGenerator {
         return rigidLines;
     }
 
-    public List<Vector2Int> GetBranchPointsIntervals() {
+    public List<int[]> GetBranchPointsIntervals() {
         return branchPointsInterval;
     }
 
@@ -165,5 +167,15 @@ public class PlantGenerator {
             secondBranch.GetStartingNodeIndex(), secondBranch.GetStartingNodeIndex() + secondBranch.GetNodeCount() - 1,
             distance, firstBranch.GetDistance(), linearIncreaseFactor);
 
+    }
+
+    private void AddBranchPointsIndexes(Attachment attachment) {
+        List<int> pointsIndexes = new List<int>();
+
+        pointsIndexes.Add(attachment.nodeIndex);
+        for (int i = 0; i < attachment.childBranch.GetNodeCount(); i++) {
+            pointsIndexes.Add(attachment.childBranch.GetStartingNodeIndex() + i);
+        }
+        branchPointsInterval.Add(pointsIndexes.ToArray());
     }
 }

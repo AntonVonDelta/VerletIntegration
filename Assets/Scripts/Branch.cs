@@ -23,8 +23,10 @@ public class Branch {
         ConnectPointsByLines(nodes, distance);
     }
 
-    public void AddChildBranch(int relativeAttachmentNodeIndex, Branch child) {
-        childBranches.Add(new Attachment { nodeIndex = startingNodeIndex + relativeAttachmentNodeIndex, childBranch = child });
+    public Attachment AddChildBranch(int relativeAttachmentNodeIndex, Branch child) {
+        Attachment newAttachment = new Attachment { nodeIndex = startingNodeIndex + relativeAttachmentNodeIndex, childBranch = child };
+        childBranches.Add(newAttachment);
+        return newAttachment;
     }
 
     public int GetStartingNodeIndex() {
