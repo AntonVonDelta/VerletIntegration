@@ -50,26 +50,10 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
-        //simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
-
-        //ConnectPointsByLines(0, 3, 1);
-        //constraintLines.Add(new RigidLine(3, 0, 1));
-        //constraintLines.Add(new RigidLine(0, 2, 1));
-
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
-        CreateVerletPoints(8);
-
-
-        ConnectPointsByLines(0, 5, 1);
-        ConnectPointsByLines(6, 8, 1f);
-
-        // Connect the two chains
-        //constraintLines.Add(new RigidLine(1, 6, 1));
-
-        CrossConnectTwoChains(1, 5, 6, 8, 1f);
+        PlantGenerator plant = new PlantGenerator(8, 2);
+        plant.Generate();
+        simulationPoints = plant.GetVerletPoints();
+        rigidLines = plant.GetRigidLines();
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
