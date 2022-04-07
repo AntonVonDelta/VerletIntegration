@@ -53,7 +53,7 @@ public class VerletIntegration : MonoBehaviour {
     private List<GameObject> instantiated = new List<GameObject>();
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
-
+    private List<Vector2Int> branchPointsInterval;
 
     void Start() {
         playerRb = player.GetComponent<Rigidbody>();
@@ -65,6 +65,13 @@ public class VerletIntegration : MonoBehaviour {
 
         simulationPoints = plant.GetVerletPoints();
         rigidLines = plant.GetRigidLines();
+        branchPointsInterval = plant.GetBranchPointsIntervals();
+
+        // Create line renderes for each branch
+        for (int i = 0; i < branchPointsInterval.Count; i++) {
+            gameObject.AddComponent<LineRenderer>();
+        }
+
         for (int i = 0; i < simulationPoints.Count; i++) {
             GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
             newReferenceObject.name = $"Sphere {i}";
@@ -81,6 +88,15 @@ public class VerletIntegration : MonoBehaviour {
         }
 
         UpdateAttachedObjects();
+
+        LineRenderer[] renderers = GetComponents<LineRenderer>();
+        for (int i = 0; i < branchPointsInterval.Count; i++) {
+            LineRenderer renderer = renderers[i];
+
+            for (int j = 0; j < branchPointsInterval[i].y - branchPointsInterval[i].x; j++) {
+                renderer.SetPosition(j, simulationPoints[j + branchPointsInterval[i].x].pos);
+            }
+        }
 
         //for (int i = 0; i < instantiated.Count; i++) {
         //    RaycastHit hit;

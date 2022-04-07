@@ -6,15 +6,20 @@ using static VerletIntegration;
 public class PlantGenerator {
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
+
+    // This stores the interval of the indexes of points of each branch represented in the main array simulationPoints
+    private List<Vector2Int> branchPointsInterval = new List<Vector2Int>();
+
     private int mainBranchSize;
     private int maxBranching;
     private float halvingRatio;
     private float branchLinearDistanceFactor;
     public float distanceAwayFromParentBranch;
 
+    private Branch mainBranch;
     private int uniqueIndex = 0;
 
-    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor,float distanceAwayFromParentBranch) {
+    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor, float distanceAwayFromParentBranch) {
         this.mainBranchSize = mainBranchSize;
         this.maxBranching = maxBranching;
         this.halvingRatio = halvingRatio;
@@ -23,7 +28,7 @@ public class PlantGenerator {
     }
 
     public void Generate() {
-        Branch mainBranch = new Branch(uniqueIndex, mainBranchSize);
+        mainBranch = new Branch(uniqueIndex, mainBranchSize);
         Queue<Branch> pendingBranches = new Queue<Branch>();
         Queue<Branch> newBranches = new Queue<Branch>();
 
@@ -46,11 +51,12 @@ public class PlantGenerator {
                     if (rand < nodeProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
-                                                
+
                         // Exclude 0 or 1 item branches
                         if (newBranchNodeCount <= 1) continue;
 
                         Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
+                        branchPointsInterval.Add(new Vector2Int(uniqueIndex, uniqueIndex + newBranchNodeCount));
                         uniqueIndex += newBranchNodeCount;
                         currentBranch.AddChildBranch(j, newBranch);
 
@@ -78,7 +84,7 @@ public class PlantGenerator {
 
 
                         // Move iterator to next possible branching position
-                        j += newBranchNodeCount-1;
+                        j += newBranchNodeCount - 1;
                     }
                 }
             }
@@ -103,6 +109,10 @@ public class PlantGenerator {
 
     public List<RigidLine> GetRigidLines() {
         return rigidLines;
+    }
+
+    public List<Vector2Int> GetBranchPointsIntervals() {
+        return branchPointsInterval;
     }
 
     /// <summary>
@@ -144,7 +154,7 @@ public class PlantGenerator {
     private void CrossConnectTwoSymetricalChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, float distanceOnfirstBranch, float linearIncreaseFactor) {
         int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
         for (int i = 0; i < maxIndexOffset + 1; i++) {
-            float adjustedDistance = 2*Distance(distance, linearIncreaseFactor, i);
+            float adjustedDistance = 2 * Distance(distance, linearIncreaseFactor, i);
 
             rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
 
