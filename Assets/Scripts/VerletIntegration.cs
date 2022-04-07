@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class VerletIntegration : MonoBehaviour {
-    struct VerletPoint {
+    public struct VerletPoint {
         public Vector3 oldPos;
         public Vector3 pos;
         public bool locked;
@@ -18,7 +18,7 @@ public class VerletIntegration : MonoBehaviour {
         }
     };
 
-    struct RigidLine {
+    public struct RigidLine {
         public int pIndex1;
         public int pIndex2;
         public float distance;
@@ -38,7 +38,7 @@ public class VerletIntegration : MonoBehaviour {
 
     List<GameObject> instantiated = new List<GameObject>();
     List<VerletPoint> simulationPoints = new List<VerletPoint>();
-    List<RigidLine> constraintLines = new List<RigidLine>();
+    List<RigidLine> rigidLines = new List<RigidLine>();
 
     private Rigidbody playerRb;
     private Vector3 lastPos;
@@ -60,16 +60,7 @@ public class VerletIntegration : MonoBehaviour {
         //constraintLines.Add(new RigidLine(0, 2, 1));
 
         simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
-
-        // Another branch
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
+        CreateVerletPoints(8);
 
 
         ConnectPointsByLines(0, 5, 1);
@@ -123,8 +114,8 @@ public class VerletIntegration : MonoBehaviour {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(gizmoPos, 0.2f);
 
-        for (int i = 0; i < constraintLines.Count; i++) {
-            RigidLine line = constraintLines[i];
+        for (int i = 0; i < rigidLines.Count; i++) {
+            RigidLine line = rigidLines[i];
             VerletPoint p1 = simulationPoints[line.pIndex1];
             VerletPoint p2 = simulationPoints[line.pIndex2];
             Gizmos.DrawLine(p1.pos, p2.pos);
@@ -154,8 +145,8 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
     private void UpdateSticks() {
-        for (int i = 0; i < constraintLines.Count; i++) {
-            RigidLine line = constraintLines[i];
+        for (int i = 0; i < rigidLines.Count; i++) {
+            RigidLine line = rigidLines[i];
             VerletPoint p1 = simulationPoints[line.pIndex1];
             VerletPoint p2 = simulationPoints[line.pIndex2];
 
@@ -223,18 +214,24 @@ public class VerletIntegration : MonoBehaviour {
     private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, bool cross1 = true, bool cross2 = true) {
         int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
         for (int i = 0; i < maxIndexOffset + 1; i++) {
-            constraintLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
+            rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
             if (cross1 && i != maxIndexOffset) {
-                constraintLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, distance * Mathf.Sqrt(2)));
+                rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, distance * Mathf.Sqrt(2)));
             }
             if (cross2 && i != maxIndexOffset) {
-                constraintLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, distance * Mathf.Sqrt(2)));
+                rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, distance * Mathf.Sqrt(2)));
             }
         }
     }
     private void ConnectPointsByLines(int startIndex, int finalIndex, float distance) {
         for (int i = startIndex; i < finalIndex; i++) {
-            constraintLines.Add(new RigidLine(i, i + 1, distance));
+            rigidLines.Add(new RigidLine(i, i + 1, distance));
+        }
+    }
+
+    private void CreateVerletPoints(int count) {
+        for(int i = 0; i < count; i++) {
+            simulationPoints.Add(new VerletPoint(Random.insideUnitSphere));
         }
     }
 }

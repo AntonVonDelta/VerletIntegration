@@ -535,5 +535,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 108406221}
   prefab: {fileID: 1943070692951463592, guid: 9592c158c2b9987489acd0290fc31164, type: 3}
-  gravity: {x: 0, y: 0.001, z: 0}
+  gravity: {x: 0, y: 0.01, z: 0}
   friction: 0.99
