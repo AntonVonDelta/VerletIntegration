@@ -12,7 +12,7 @@ public class PlantGenerator {
     private float branchLinearDistanceFactor;
     private int uniqueIndex = 0;
 
-    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio,float branchLinearDistanceFactor) {
+    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor) {
         this.mainBranchSize = mainBranchSize;
         this.maxBranching = maxBranching;
         this.halvingRatio = halvingRatio;
@@ -31,6 +31,7 @@ public class PlantGenerator {
         simulationPoints.AddRange(mainBranch.GetVerletPoints());
         rigidLines.AddRange(mainBranch.GetRigidLines());
 
+
         for (int i = 0; i < maxBranching; i++) {
             while (pendingBranches.Count != 0) {
                 Branch currentBranch = pendingBranches.Dequeue();
@@ -40,11 +41,13 @@ public class PlantGenerator {
                     float nodeProbability = Mathf.Lerp(0, 9, (float)j / (currentBranch.GetNodeCount() - 1));
 
                     if (rand < nodeProbability) {
-                        int newBranchNodes = (int) (currentBranch.GetNodeCount() / halvingRatio);
-                        if (newBranchNodes == 0) continue;
+                        int newBranchNodeCount = 2;// Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
+                        if (newBranchNodeCount == 0) continue;
 
-                        Branch newBranch = new Branch(uniqueIndex, newBranchNodes);
-                        uniqueIndex += newBranchNodes;
+                        float x = Mathf.Sqrt(1 * 1 + branchLinearDistanceFactor * branchLinearDistanceFactor);
+
+                        Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, x);
+                        uniqueIndex += newBranchNodeCount;
                         currentBranch.AddChildBranch(j, newBranch);
 
                         newBranches.Enqueue(newBranch);
@@ -53,6 +56,8 @@ public class PlantGenerator {
                         simulationPoints.AddRange(newBranch.GetVerletPoints());
                         rigidLines.AddRange(newBranch.GetRigidLines());
                         CrossConnectTwoChains(currentBranch, j, newBranch, 1f * Mathf.Sqrt(2), branchLinearDistanceFactor);
+
+                        return;
                     }
                 }
             }
@@ -87,16 +92,22 @@ public class PlantGenerator {
     private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, float linearIncreaseFactor) {
         int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
         for (int i = 0; i < maxIndexOffset + 1; i++) {
-            rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
+            float adjustedDistance = Distance(distance, linearIncreaseFactor, i);
 
-            float adjustedDistance = distance + i * linearIncreaseFactor;
-            if (i != maxIndexOffset) {
-                rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, adjustedDistance));
+            rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
+
+            if (startIndex2 + i + 1 <= finalIndex2) {
+                float diagonalDistance = Mathf.Sqrt(1 * 1 + Distance(distance, linearIncreaseFactor, i + 1));
+                rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, diagonalDistance));
             }
-            if (i != maxIndexOffset) {
-                rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, adjustedDistance));
+            if (startIndex1 + i + 1 <= finalIndex1) {
+                float diagonalDistance = Mathf.Sqrt(1 * 1 + Distance(distance, linearIncreaseFactor, i));
+                rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, diagonalDistance));
             }
         }
+    }
+    private float Distance(float distance, float linearIncreaseFactor, int level) {
+        return distance + level * linearIncreaseFactor;
     }
 
     /// <summary>

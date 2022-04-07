@@ -14,11 +14,11 @@ public class Branch {
     private List<RigidLine> rigidLines = new List<RigidLine>();
     private int startingNodeIndex = -1;
 
-    public Branch(int startingNodeIndex, int nodes) {
+    public Branch(int startingNodeIndex, int nodes, float distance=1f) {
         this.startingNodeIndex = startingNodeIndex;
 
         CreateVerletPoints(nodes);
-        ConnectPointsByLines(nodes, 1f);
+        ConnectPointsByLines(nodes, distance);
     }
 
     public void AddChildBranch(int relativeAttachmentNodeIndex, Branch child) {
