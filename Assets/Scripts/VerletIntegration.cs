@@ -78,6 +78,7 @@ public class VerletIntegration : MonoBehaviour {
             renderer.positionCount = branchPointsInterval[i].Length;
             renderer.material = linesMaterial;
             renderer.endWidth = 0.2f;
+            renderer.generateLightingData = true;
 
             lineRenderersParents.Add(newRenderObject);
         }

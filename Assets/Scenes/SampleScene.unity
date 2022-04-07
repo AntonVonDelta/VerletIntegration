@@ -536,7 +536,7 @@ MonoBehaviour:
   player: {fileID: 108406221}
   prefab: {fileID: 1943070692951463592, guid: 9592c158c2b9987489acd0290fc31164, type: 3}
   renderPrefab: {fileID: 4643990815920974259, guid: fd3ca4ab2d607c74b974246ff694df04, type: 3}
-  linesMaterial: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  linesMaterial: {fileID: 2100000, guid: e5d45c54bae3cf149a751d3c70eaac61, type: 2}
   drawGizmo: 0
   gravity: {x: 0, y: 0.001, z: 0}
   friction: 0.99
