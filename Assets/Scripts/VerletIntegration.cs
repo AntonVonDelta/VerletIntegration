@@ -134,7 +134,10 @@ public class VerletIntegration : MonoBehaviour {
 
             point.oldPos = point.pos;
             point.pos += dVec;
-            point.pos += gravity;
+
+            Vector3 denominator = Vector3.one * Mathf.Max(0, point.pos.y) + new Vector3(1 / gravity.x, 1 / gravity.y, 1 / gravity.z);
+            Vector3 adjustedGravitiy = new Vector3(1 / denominator.x, 1 / denominator.y, 1 / denominator.z);
+            point.pos += adjustedGravitiy;
 
             simulationPoints[i] = point;
         }
