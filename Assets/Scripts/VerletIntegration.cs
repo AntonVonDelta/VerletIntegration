@@ -74,8 +74,11 @@ public class VerletIntegration : MonoBehaviour {
         // Create line renderes for each branch
         for (int i = 0; i < branchPointsInterval.Count; i++) {
             GameObject newRenderObject = Instantiate(renderPrefab);
-            newRenderObject.GetComponent<LineRenderer>().positionCount = branchPointsInterval[i].Length;
-            newRenderObject.GetComponent<LineRenderer>().material = linesMaterial;
+            LineRenderer renderer = newRenderObject.GetComponent<LineRenderer>();
+            renderer.positionCount = branchPointsInterval[i].Length;
+            renderer.material = linesMaterial;
+            renderer.endWidth = 0.2f;
+
             lineRenderersParents.Add(newRenderObject);
         }
 
