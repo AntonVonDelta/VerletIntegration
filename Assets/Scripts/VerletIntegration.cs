@@ -52,9 +52,10 @@ public class VerletIntegration : MonoBehaviour {
 
         PlantGenerator plant = new PlantGenerator(8, 2);
         plant.Generate();
+        plant.LockPoint(0, new Vector3(0, 1, 0));
+
         simulationPoints = plant.GetVerletPoints();
         rigidLines = plant.GetRigidLines();
-
         for (int i = 0; i < simulationPoints.Count; i++) {
             instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
         }

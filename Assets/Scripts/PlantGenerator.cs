@@ -60,6 +60,13 @@ public class PlantGenerator {
 
     }
 
+    public void LockPoint(int index, Vector3 position) {
+        VerletPoint point = simulationPoints[index];
+        point.pos = position;
+        point.locked = true;
+        simulationPoints[index] = point;
+    }
+
     public List<VerletPoint> GetVerletPoints() {
         return simulationPoints;
     }
