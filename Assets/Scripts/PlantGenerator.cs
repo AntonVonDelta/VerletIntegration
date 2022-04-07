@@ -57,7 +57,7 @@ public class PlantGenerator {
                         rigidLines.AddRange(newBranch.GetRigidLines());
                         CrossConnectTwoChains(currentBranch, j, newBranch, 1f * Mathf.Sqrt(2), branchLinearDistanceFactor);
 
-                        return;
+                        //return;
                     }
                 }
             }
@@ -96,11 +96,11 @@ public class PlantGenerator {
 
             rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, adjustedDistance));
 
-            if (i != maxIndexOffset) {
+            if (startIndex2 + i + 1<= finalIndex2) {
                 float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i + 1), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, diagonalDistance));
             }
-            if (i != maxIndexOffset) {
+            if (startIndex1 + i + 1 <= finalIndex1) {
                 float diagonalDistance = Mathf.Sqrt(1 * 1 + Mathf.Pow(Distance(distance, linearIncreaseFactor, i), 2));
                 rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, diagonalDistance));
             }
