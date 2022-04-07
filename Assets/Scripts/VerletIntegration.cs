@@ -50,14 +50,26 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 1, 0), true));
         simulationPoints.Add(new VerletPoint(new Vector3(0, 2, 0)));
         simulationPoints.Add(new VerletPoint(new Vector3(0, 3, 0)));
         simulationPoints.Add(new VerletPoint(new Vector3(0, 4, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 5, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 6, 0)));
 
-        constraintLines.Add(new RigidLine(0, 1));
-        constraintLines.Add(new RigidLine(1, 2));
-        constraintLines.Add(new RigidLine(2, 3));
+        // Another branch
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 7, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 8, 0)));
+        simulationPoints.Add(new VerletPoint(new Vector3(0, 9, 0)));
+
+
+        ConnectPointsByLines(0, 5, 1);
+        ConnectPointsByLines(6, 8, 1);
+
+        // Connect the two chains
+        constraintLines.Add(new RigidLine(1, 5, 1));
+
+        CrossConnectTwoChains(0, 5, 6, 8, 2.5f);
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
@@ -114,10 +126,11 @@ public class VerletIntegration : MonoBehaviour {
             VerletPoint point = simulationPoints[i];
             Vector3 dVec = (point.pos - point.oldPos) * friction;
 
+            if (point.locked) continue;
+
             point.oldPos = point.pos;
             point.pos += dVec;
             point.pos += gravity;
-
 
             simulationPoints[i] = point;
         }
@@ -132,18 +145,18 @@ public class VerletIntegration : MonoBehaviour {
             Vector3 dPos = p2.pos - p1.pos;
 
             // By how much the line stretched
-            float extensionPercent = (currentDistance - line.distance) / line.distance;
+            float extensionPercent = (line.distance - currentDistance) / currentDistance;
 
             // Calculate the extension per component axis
-            Vector3 correctionPerAxis = dPos * (extensionPercent / 2);
+            Vector3 correctionPerAxis = dPos * extensionPercent / 2;
 
             // Correct each point
-            p1.pos += correctionPerAxis;
-            p2.pos -= correctionPerAxis;
+            p1.pos -= correctionPerAxis;
+            p2.pos += correctionPerAxis;
 
             // Update results
-            simulationPoints[line.pIndex1] = p1;
-            simulationPoints[line.pIndex2] = p2;
+            if (!p1.locked) simulationPoints[line.pIndex1] = p1;
+            if (!p2.locked) simulationPoints[line.pIndex2] = p2;
         }
     }
 
@@ -162,6 +175,17 @@ public class VerletIntegration : MonoBehaviour {
     private void UpdateAttachedObjects() {
         for (int i = 0; i < instantiated.Count; i++) {
             instantiated[i].transform.position = simulationPoints[i].pos;
+        }
+    }
+
+    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance) {
+        for (int i = 0; i < Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2) + 1; i++) {
+            constraintLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
+        }
+    }
+    private void ConnectPointsByLines(int startIndex, int finalIndex, float distance) {
+        for (int i = startIndex; i < finalIndex; i++) {
+            constraintLines.Add(new RigidLine(i, i + 1, distance));
         }
     }
 }
