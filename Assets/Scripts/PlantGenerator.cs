@@ -48,7 +48,7 @@ public class PlantGenerator {
                         // Add points and constraint lines
                         simulationPoints.AddRange(newBranch.GetVerletPoints());
                         rigidLines.AddRange(newBranch.GetRigidLines());
-                        CrossConnectTwoChains(currentBranch, newBranch, 1f);
+                        CrossConnectTwoChains(currentBranch, j, newBranch, 1f);
                     }
                 }
             }
@@ -92,8 +92,8 @@ public class PlantGenerator {
             }
         }
     }
-    private void CrossConnectTwoChains(Branch firstBranch, Branch secondBranch, float distance, bool cross1 = true, bool cross2 = true) {
-        CrossConnectTwoChains(firstBranch.GetStartingNodeIndex(), firstBranch.GetNodeCount(),
+    private void CrossConnectTwoChains(Branch firstBranch, int relativeStartingIndex, Branch secondBranch, float distance, bool cross1 = true, bool cross2 = true) {
+        CrossConnectTwoChains(firstBranch.GetStartingNodeIndex() + relativeStartingIndex, firstBranch.GetNodeCount(),
             secondBranch.GetStartingNodeIndex(), secondBranch.GetNodeCount(),
             distance, cross1, cross2);
     }
