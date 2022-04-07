@@ -12,10 +12,12 @@ public class Branch {
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<Attachment> childBranches = new List<Attachment>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
+    private Branch parent;
     private int startingNodeIndex = -1;
     private float distance;
 
-    public Branch(int startingNodeIndex, int nodes, float distance=1f) {
+    public Branch(Branch parent,int startingNodeIndex, int nodes, float distance = 1f) {
+        this.parent = parent;
         this.startingNodeIndex = startingNodeIndex;
         this.distance = distance;
 
@@ -29,6 +31,9 @@ public class Branch {
         return newAttachment;
     }
 
+    public Branch GetParent() {
+        return parent;
+    }
     public int GetStartingNodeIndex() {
         return startingNodeIndex;
     }

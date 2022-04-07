@@ -34,6 +34,8 @@ public class VerletIntegration : MonoBehaviour {
     public GameObject player;
     public GameObject prefab;
     public GameObject renderPrefab;
+    public Material linesMaterial;
+    public bool drawGizmo = true;
 
     [Header("Physics settings")]
     public Vector3 gravity = Vector3.up * 0.01f;
@@ -73,14 +75,15 @@ public class VerletIntegration : MonoBehaviour {
         for (int i = 0; i < branchPointsInterval.Count; i++) {
             GameObject newRenderObject = Instantiate(renderPrefab);
             newRenderObject.GetComponent<LineRenderer>().positionCount = branchPointsInterval[i].Length;
+            newRenderObject.GetComponent<LineRenderer>().material = linesMaterial;
             lineRenderersParents.Add(newRenderObject);
         }
 
-        for (int i = 0; i < simulationPoints.Count; i++) {
-            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
-            newReferenceObject.name = $"Sphere {i}";
-            instantiated.Add(newReferenceObject);
-        }
+        //for (int i = 0; i < simulationPoints.Count; i++) {
+        //    GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
+        //    newReferenceObject.name = $"Sphere {i}";
+        //    instantiated.Add(newReferenceObject);
+        //}
     }
 
     void Update() {
@@ -91,7 +94,7 @@ public class VerletIntegration : MonoBehaviour {
             ApplyConstraints();
         }
 
-        UpdateAttachedObjects();
+        //UpdateAttachedObjects();
 
         for (int i = 0; i < lineRenderersParents.Count; i++) {
             LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
@@ -128,6 +131,8 @@ public class VerletIntegration : MonoBehaviour {
     private void OnDrawGizmos() {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(gizmoPos, 0.2f);
+
+        if (!drawGizmo) return;
 
         for (int i = 0; i < rigidLines.Count; i++) {
             RigidLine line = rigidLines[i];

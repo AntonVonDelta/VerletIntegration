@@ -29,7 +29,7 @@ public class PlantGenerator {
     }
 
     public void Generate() {
-        mainBranch = new Branch(uniqueIndex, mainBranchSize);
+        mainBranch = new Branch(null, uniqueIndex, mainBranchSize);
         Queue<Branch> pendingBranches = new Queue<Branch>();
         Queue<Branch> newBranches = new Queue<Branch>();
 
@@ -40,6 +40,8 @@ public class PlantGenerator {
         simulationPoints.AddRange(mainBranch.GetVerletPoints());
         rigidLines.AddRange(mainBranch.GetRigidLines());
 
+        // Add indexes for line renderers
+        AddBranchPointsIndexes(mainBranch);
 
         for (int i = 0; i < maxBranching; i++) {
             while (pendingBranches.Count != 0) {
@@ -56,7 +58,7 @@ public class PlantGenerator {
                         // Exclude 0 or 1 item branches
                         if (newBranchNodeCount <= 1) continue;
 
-                        Branch newBranch = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
+                        Branch newBranch = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
                         Attachment newAttachment = currentBranch.AddChildBranch(j, newBranch);
                         AddBranchPointsIndexes(newAttachment);
@@ -70,7 +72,7 @@ public class PlantGenerator {
 
 
                         // Create symetrical branch
-                        Branch newBranch2 = new Branch(uniqueIndex, newBranchNodeCount, branchPointsDistance);
+                        Branch newBranch2 = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
                         newAttachment = currentBranch.AddChildBranch(j, newBranch2);
                         AddBranchPointsIndexes(newAttachment);
@@ -82,11 +84,17 @@ public class PlantGenerator {
                         rigidLines.AddRange(newBranch2.GetRigidLines());
                         CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
+
+
+
+                        // Get the two newly created branches and connect between them to prevent both collapsing
+                        // in the same space
+                        // We do this by connecting a line between them that keeps them separate
                         CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
 
                         // Move iterator to next possible branching position
-                        j += newBranchNodeCount - 1;
+                        j +=Mathf.Max(0, newBranchNodeCount - 4);
                     }
                 }
             }
@@ -175,6 +183,14 @@ public class PlantGenerator {
         pointsIndexes.Add(attachment.nodeIndex);
         for (int i = 0; i < attachment.childBranch.GetNodeCount(); i++) {
             pointsIndexes.Add(attachment.childBranch.GetStartingNodeIndex() + i);
+        }
+        branchPointsInterval.Add(pointsIndexes.ToArray());
+    }
+    private void AddBranchPointsIndexes(Branch branch) {
+        List<int> pointsIndexes = new List<int>();
+
+        for (int i = 0; i < branch.GetNodeCount(); i++) {
+            pointsIndexes.Add(branch.GetStartingNodeIndex() + i);
         }
         branchPointsInterval.Add(pointsIndexes.ToArray());
     }
