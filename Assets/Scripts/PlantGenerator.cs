@@ -80,21 +80,21 @@ public class PlantGenerator {
     /// Cross1 controls whether to insert a diagonal line from first to second chain to form a rigid structure
     /// Cross2 controls the other direction. Together they make an X inside a square
     /// </summary>
-    private void CrossConnectTwoChains(int startIndex1, int countNodes1, int startIndex2, int countNodes2, float distance, bool cross1 = true, bool cross2 = true) {
-        int maxIndexOffset = Mathf.Min(countNodes1, countNodes2);
-        for (int i = 0; i < maxIndexOffset; i++) {
+    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, bool cross1 = true, bool cross2 = true) {
+        int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
+        for (int i = 0; i < maxIndexOffset + 1; i++) {
             rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
-            if (cross1 && i != maxIndexOffset - 1) {
+            if (cross1 && i != maxIndexOffset) {
                 rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, distance * Mathf.Sqrt(2)));
             }
-            if (cross2 && i != maxIndexOffset - 1) {
+            if (cross2 && i != maxIndexOffset) {
                 rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, distance * Mathf.Sqrt(2)));
             }
         }
     }
     private void CrossConnectTwoChains(Branch firstBranch, int relativeStartingIndex, Branch secondBranch, float distance, bool cross1 = true, bool cross2 = true) {
-        CrossConnectTwoChains(firstBranch.GetStartingNodeIndex() + relativeStartingIndex, firstBranch.GetNodeCount(),
-            secondBranch.GetStartingNodeIndex(), secondBranch.GetNodeCount(),
+        CrossConnectTwoChains(firstBranch.GetStartingNodeIndex() + relativeStartingIndex, firstBranch.GetStartingNodeIndex() + firstBranch.GetNodeCount() - 1,
+            secondBranch.GetStartingNodeIndex(), secondBranch.GetStartingNodeIndex() + secondBranch.GetNodeCount() - 1,
             distance, cross1, cross2);
     }
 }

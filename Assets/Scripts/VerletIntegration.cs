@@ -57,7 +57,9 @@ public class VerletIntegration : MonoBehaviour {
         simulationPoints = plant.GetVerletPoints();
         rigidLines = plant.GetRigidLines();
         for (int i = 0; i < simulationPoints.Count; i++) {
-            instantiated.Add(Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity));
+            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
+            newReferenceObject.name = $"Sphere {i}";
+            instantiated.Add(newReferenceObject);
         }
     }
 
@@ -188,35 +190,6 @@ public class VerletIntegration : MonoBehaviour {
     private void UpdateAttachedObjects() {
         for (int i = 0; i < instantiated.Count; i++) {
             instantiated[i].transform.position = simulationPoints[i].pos;
-        }
-    }
-
-    /// <summary>
-    /// Connect two chains starting and ending at the given indexes
-    /// Cross1 controls whether to insert a diagonal line from first to second chain to form a rigid structure
-    /// Cross2 controls the other direction. Together they make an X inside a square
-    /// </summary>
-    private void CrossConnectTwoChains(int startIndex1, int finalIndex1, int startIndex2, int finalIndex2, float distance, bool cross1 = true, bool cross2 = true) {
-        int maxIndexOffset = Mathf.Min(finalIndex1 - startIndex1, finalIndex2 - startIndex2);
-        for (int i = 0; i < maxIndexOffset + 1; i++) {
-            rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i, distance));
-            if (cross1 && i != maxIndexOffset) {
-                rigidLines.Add(new RigidLine(startIndex1 + i, startIndex2 + i + 1, distance * Mathf.Sqrt(2)));
-            }
-            if (cross2 && i != maxIndexOffset) {
-                rigidLines.Add(new RigidLine(startIndex1 + i + 1, startIndex2 + i, distance * Mathf.Sqrt(2)));
-            }
-        }
-    }
-    private void ConnectPointsByLines(int startIndex, int finalIndex, float distance) {
-        for (int i = startIndex; i < finalIndex; i++) {
-            rigidLines.Add(new RigidLine(i, i + 1, distance));
-        }
-    }
-
-    private void CreateVerletPoints(int count) {
-        for(int i = 0; i < count; i++) {
-            simulationPoints.Add(new VerletPoint(Random.insideUnitSphere));
         }
     }
 }
