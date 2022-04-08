@@ -146,17 +146,8 @@ public class VerletIntegration : MonoBehaviour {
 
     private void OnTriggerStay(Collider other) {
         for (int i = 0; i < colliderInstances.Count; i++) {
-            // Can't use OverlapSphere because that method does not release normal and hit point information
-            //if (Physics.SphereCast(instantiated[i].transform.position, radius, direction, out hit, maxDistance)) {
-            //    gizmoPos = hit.point;
-            //}
-
             // ClosestPoint works only with convex colliders - as noted on https://docs.unity3d.com/ScriptReference/Physics.ClosestPoint.html
             // ComputePenetration only works with convex colliders
-
-            //if (Physics.ComputePenetration()) {
-
-            //}
 
             // Get closest point on the aproaching surface
             Vector3 closestPoint = other.ClosestPoint(colliderInstances[i].holderObj.transform.position);
@@ -255,6 +246,9 @@ public class VerletIntegration : MonoBehaviour {
 
     private void CreateColliderInstances() {
         for (int i = 0; i < simulationPoints.Count; i++) {
+            // Do not create collider "instances" for locked points because they cannot be moved
+            if (simulationPoints[i].locked) continue;
+
             GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
             newReferenceObject.name = $"Sphere {i}";
 
