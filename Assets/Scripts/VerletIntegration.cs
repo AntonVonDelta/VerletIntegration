@@ -76,7 +76,7 @@ public class VerletIntegration : MonoBehaviour {
 
         PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch, branchingProbability);
         plant.Generate();
-        plant.LockPoint(0, new Vector3(0, 1, 0));
+        plant.LockPoint(0, transform.position);
 
         simulationPoints = plant.GetVerletPoints();
         rigidLines = plant.GetRigidLines();
@@ -115,14 +115,8 @@ public class VerletIntegration : MonoBehaviour {
         }
 
         UpdateAttachedObjects();
-
-        for (int i = 0; i < lineRenderersParents.Count; i++) {
-            LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
-
-            for (int j = 0; j < branchPointsInterval[i].pointsIndexes.Length; j++) {
-                renderer.SetPosition(j, simulationPoints[branchPointsInterval[i].pointsIndexes[j]].pos);
-            }
-        }
+        UpdateLineRenderers();
+        RecalculateBounds();
 
         //for (int i = 0; i < instantiated.Count; i++) {
         //    RaycastHit hit;
@@ -147,6 +141,8 @@ public class VerletIntegration : MonoBehaviour {
         //    }
         //}
     }
+
+
 
     private void OnDrawGizmos() {
         Gizmos.color = Color.red;
@@ -243,12 +239,41 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
 
+    private void RecalculateBounds() {
+        BoxCollider collider = GetComponent<BoxCollider>();
+        Vector3 dimensions = Vector3.zero;
+        Vector3 center = collider.center;
+
+        for (int i = 0; i < simulationPoints.Count; i++) {
+            VerletPoint point = simulationPoints[i];
+
+            dimensions.x = Mathf.Max(dimensions.x, Mathf.Abs(point.pos.x-center.x));
+            dimensions.y = Mathf.Max(dimensions.y, Mathf.Abs(point.pos.y - center.z));
+            dimensions.z = Mathf.Max(dimensions.z, Mathf.Abs(point.pos.y - center.z));
+
+
+            simulationPoints[i] = point;
+        }
+
+        collider.size = dimensions;
+    }
+
     private void UpdateAttachedObjects() {
         for (int i = 0; i < instantiated.Count; i++) {
             if (showSpheres) {
                 if (!instantiated[i].activeInHierarchy) instantiated[i].SetActive(true);
                 instantiated[i].transform.position = simulationPoints[i].pos;
             } else if (instantiated[i].activeInHierarchy) instantiated[i].SetActive(false);
+        }
+    }
+
+    private void UpdateLineRenderers() {
+        for (int i = 0; i < lineRenderersParents.Count; i++) {
+            LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
+
+            for (int j = 0; j < branchPointsInterval[i].pointsIndexes.Length; j++) {
+                renderer.SetPosition(j, simulationPoints[branchPointsInterval[i].pointsIndexes[j]].pos);
+            }
         }
     }
 }
