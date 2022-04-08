@@ -37,6 +37,7 @@ public class VerletIntegration : MonoBehaviour {
     public GameObject renderPrefab;
     public Material linesMaterial;
     public bool drawGizmo = true;
+    public bool showSpheres = false;
 
     [Header("Physics settings")]
     public Vector3 gravity = Vector3.up * 0.01f;
@@ -46,8 +47,11 @@ public class VerletIntegration : MonoBehaviour {
     [Header("Points settings")]
     public int mainBranchPoints = 20;
     public int maxBranchLevels = 4;
-    public int branchItemCountHalvingRatio = 2;  // By what amount to divide the number of points for the next branch
-    public float branchLinearDistanceFactor = 0.2f;     // By what amount to increase the distance of side branches relative to their parent
+    [Tooltip("By what amount to divide the number of points for the next branch")]
+    public int branchItemCountHalvingRatio = 2;
+    [Tooltip("By what amount to increase the distance of side branches relative to their parent")]
+    public float linearDistancingFromParentFactor = 0.2f;
+    [Tooltip("Initial distance of first child branch point from the parent branch")]
     public float distanceAwayFromParentBranch = 1;
 
     [Header("Line settings")]
@@ -68,7 +72,7 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, branchLinearDistanceFactor, distanceAwayFromParentBranch);
+        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch);
         plant.Generate();
         plant.LockPoint(0, new Vector3(0, 1, 0));
 
@@ -91,11 +95,13 @@ public class VerletIntegration : MonoBehaviour {
             lineRenderersParents.Add(newRenderObject);
         }
 
-        //for (int i = 0; i < simulationPoints.Count; i++) {
-        //    GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
-        //    newReferenceObject.name = $"Sphere {i}";
-        //    instantiated.Add(newReferenceObject);
-        //}
+        for (int i = 0; i < simulationPoints.Count; i++) {
+            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
+            newReferenceObject.name = $"Sphere {i}";
+
+            newReferenceObject.SetActive(false);
+            instantiated.Add(newReferenceObject);
+        }
     }
 
     void Update() {
@@ -106,7 +112,7 @@ public class VerletIntegration : MonoBehaviour {
             ApplyConstraints();
         }
 
-        //UpdateAttachedObjects();
+        UpdateAttachedObjects();
 
         for (int i = 0; i < lineRenderersParents.Count; i++) {
             LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
@@ -237,7 +243,10 @@ public class VerletIntegration : MonoBehaviour {
 
     private void UpdateAttachedObjects() {
         for (int i = 0; i < instantiated.Count; i++) {
-            instantiated[i].transform.position = simulationPoints[i].pos;
+            if (showSpheres) {
+                if (!instantiated[i].activeInHierarchy) instantiated[i].SetActive(true);
+                instantiated[i].transform.position = simulationPoints[i].pos;
+            } else if (instantiated[i].activeInHierarchy) instantiated[i].SetActive(false);
         }
     }
 }

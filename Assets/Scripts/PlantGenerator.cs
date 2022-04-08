@@ -71,24 +71,24 @@ public class PlantGenerator {
                         CrossConnectTwoChains(currentBranch, j, newBranch, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
 
-                        // Create symetrical branch
-                        Branch newBranch2 = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
-                        uniqueIndex += newBranchNodeCount;
-                        newAttachment = currentBranch.AddChildBranch(j, newBranch2);
-                        newBranches.Enqueue(newBranch2);
+                        //// Create symetrical branch
+                        //Branch newBranch2 = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
+                        //uniqueIndex += newBranchNodeCount;
+                        //newAttachment = currentBranch.AddChildBranch(j, newBranch2);
+                        //newBranches.Enqueue(newBranch2);
 
-                        // Add points and constraint lines
-                        simulationPoints.AddRange(newBranch2.GetVerletPoints());
-                        rigidLines.AddRange(newBranch2.GetRigidLines());
-                        CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
-
-
+                        //// Add points and constraint lines
+                        //simulationPoints.AddRange(newBranch2.GetVerletPoints());
+                        //rigidLines.AddRange(newBranch2.GetRigidLines());
+                        //CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
 
-                        // Get the two newly created branches and connect between them to prevent both collapsing
-                        // in the same space
-                        // We do this by connecting a line between them that keeps them separate
-                        CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+
+
+                        //// Get the two newly created branches and connect between them to prevent both collapsing
+                        //// in the same space
+                        //// We do this by connecting a line between them that keeps them separate
+                        //CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
 
 
                         // Move iterator to next possible branching position
