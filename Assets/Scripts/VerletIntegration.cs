@@ -31,13 +31,19 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
 
+    struct ColliderPoint {
+        public int pointIndex;
+        public GameObject holderObj;
+    }
 
     public GameObject player;
     public GameObject prefab;
     public GameObject renderPrefab;
     public Material linesMaterial;
     public bool drawGizmo = true;
-    public bool showSpheres = false;
+
+    private bool lastShowColliders = false;
+    public bool showColliders = false;
 
     [Header("Physics settings")]
     public Vector3 gravity = Vector3.up * 0.01f;
@@ -64,7 +70,7 @@ public class VerletIntegration : MonoBehaviour {
     private Vector3 lastPos;
     private Vector3 gizmoPos = Vector3.zero;
 
-    private List<GameObject> instantiated = new List<GameObject>();
+    private List<ColliderPoint> colliderInstances = new List<ColliderPoint>();
     private List<GameObject> lineRenderersParents = new List<GameObject>();
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
@@ -97,13 +103,10 @@ public class VerletIntegration : MonoBehaviour {
             lineRenderersParents.Add(newRenderObject);
         }
 
-        for (int i = 0; i < simulationPoints.Count; i++) {
-            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
-            newReferenceObject.name = $"Sphere {i}";
+        CreateColliderInstances();
 
-            newReferenceObject.SetActive(false);
-            instantiated.Add(newReferenceObject);
-        }
+        // Set up collider to be only Trigger
+        GetComponent<BoxCollider>().isTrigger = true;
     }
 
     void Update() {
@@ -114,32 +117,19 @@ public class VerletIntegration : MonoBehaviour {
             ApplyConstraints();
         }
 
-        UpdateAttachedObjects();
+        UpdateColliderInstances();
         UpdateLineRenderers();
         RecalculateBounds();
 
-        //for (int i = 0; i < instantiated.Count; i++) {
-        //    RaycastHit hit;
-        //    Vector3 direction = Vector3.up;
-        //    float radius = instantiated[i].transform.localScale.x;
-        //    float maxDistance = 1.2f;
+        // Handle UI option
+        if (lastShowColliders != showColliders) {
+            lastShowColliders = showColliders;
 
-        //    // Can't use OverlapSphere because that method does not release normal and hit point information
-        //    //if (Physics.SphereCast(instantiated[i].transform.position, radius, direction, out hit, maxDistance)) {
-        //    //    gizmoPos = hit.point;
-        //    //}
-
-        //    Collider[] colliders = Physics.OverlapSphere(instantiated[i].transform.position, radius);
-        //    for (int j = 0; j < colliders.Length; j++) {
-        //        Vector3 closestPoint = colliders[j].ClosestPoint(instantiated[i].transform.position);
-        //        Ray ray = new Ray(instantiated[i].transform.position, closestPoint - instantiated[i].transform.position);
-        //        if (Physics.Raycast(ray, out hit, maxDistance)) {
-        //            gizmoPos = hit.point;
-
-        //            // Use this information to push points back
-        //        }
-        //    }
-        //}
+            for (int i = 0; i < colliderInstances.Count; i++) {
+                MeshRenderer renderer = colliderInstances[i].holderObj.GetComponent<MeshRenderer>();
+                renderer.enabled = showColliders;
+            }
+        }
     }
 
 
@@ -158,13 +148,43 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
 
-    private void OnTriggerEnter(Collider other) {
-        Debug.Log("Trigger enter");
+    private void OnTriggerStay(Collider other) {
+        for (int i = 0; i < colliderInstances.Count; i++) {
+            Vector3 direction = Vector3.up;
+            float radius = colliderInstances[i].holderObj.transform.localScale.x;
+            float maxDistance = 1.2f;
+
+            // Can't use OverlapSphere because that method does not release normal and hit point information
+            //if (Physics.SphereCast(instantiated[i].transform.position, radius, direction, out hit, maxDistance)) {
+            //    gizmoPos = hit.point;
+            //}
+
+            Collider[] colliders = Physics.OverlapSphere(colliderInstances[i].holderObj.transform.position, radius);
+            for (int j = 0; j < colliders.Length; j++) {
+                // Do not interact with the containing object collider
+                if (colliders[j].gameObject == gameObject) continue;
+
+                // Get closest point on the aproaching surface
+                Vector3 closestPoint = colliders[j].ClosestPoint(colliderInstances[i].holderObj.transform.position);
+
+                if ((closestPoint - colliderInstances[i].holderObj.transform.position).sqrMagnitude < Mathf.Epsilon) {
+                    // The trigger point is inside the collider
+                } else {
+                    // Cast an ray in order to get normal and other information
+                    Ray ray = new Ray(colliderInstances[i].holderObj.transform.position, closestPoint - colliderInstances[i].holderObj.transform.position);
+                    RaycastHit hit;
+                    if (Physics.Raycast(ray, out hit, maxDistance)) {
+                        gizmoPos = hit.point;
+
+                        // Use this information to push points back
+                        VerletPoint point = simulationPoints[colliderInstances[i].pointIndex];
+                        point.pos += hit.normal * 2 * maxDistance;
+                    }
+                }
+            }
+        }
     }
 
-    private void OnCollisionEnter(Collision collision) {
-        Debug.Log($"Collision enter with {collision.collider.name}");
-    }
 
     private void UpdatePoints() {
         for (int i = 0; i < simulationPoints.Count; i++) {
@@ -239,31 +259,42 @@ public class VerletIntegration : MonoBehaviour {
         }
     }
 
+    private void CreateColliderInstances() {
+        for (int i = 0; i < simulationPoints.Count; i++) {
+            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
+            newReferenceObject.name = $"Sphere {i}";
+
+            newReferenceObject.SetActive(false);
+            colliderInstances.Add(new ColliderPoint { pointIndex = i, holderObj = newReferenceObject });
+        }
+    }
+
     private void RecalculateBounds() {
         BoxCollider collider = GetComponent<BoxCollider>();
-        Vector3 dimensions = Vector3.zero;
-        Vector3 center = collider.center;
+        Vector3 dimensionsMax = -1000 * Vector3.zero;
+        Vector3 dimensionsMin = 1000 * Vector3.zero;
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             VerletPoint point = simulationPoints[i];
 
-            dimensions.x = Mathf.Max(dimensions.x, Mathf.Abs(point.pos.x-center.x));
-            dimensions.y = Mathf.Max(dimensions.y, Mathf.Abs(point.pos.y - center.z));
-            dimensions.z = Mathf.Max(dimensions.z, Mathf.Abs(point.pos.y - center.z));
+            dimensionsMax.x = Mathf.Max(dimensionsMax.x, point.pos.x);
+            dimensionsMax.y = Mathf.Max(dimensionsMax.y, point.pos.y);
+            dimensionsMax.z = Mathf.Max(dimensionsMax.z, point.pos.z);
 
+            dimensionsMin.x = Mathf.Min(dimensionsMin.x, point.pos.x);
+            dimensionsMin.y = Mathf.Min(dimensionsMin.y, point.pos.y);
+            dimensionsMin.z = Mathf.Min(dimensionsMin.z, point.pos.z);
 
             simulationPoints[i] = point;
         }
 
-        collider.size = dimensions;
+        collider.center = (dimensionsMax + dimensionsMin) / 2;
+        collider.size = dimensionsMax - dimensionsMin;
     }
 
-    private void UpdateAttachedObjects() {
-        for (int i = 0; i < instantiated.Count; i++) {
-            if (showSpheres) {
-                if (!instantiated[i].activeInHierarchy) instantiated[i].SetActive(true);
-                instantiated[i].transform.position = simulationPoints[i].pos;
-            } else if (instantiated[i].activeInHierarchy) instantiated[i].SetActive(false);
+    private void UpdateColliderInstances() {
+        for (int i = 0; i < colliderInstances.Count; i++) {
+            colliderInstances[i].holderObj.transform.position = simulationPoints[i].pos;
         }
     }
 
