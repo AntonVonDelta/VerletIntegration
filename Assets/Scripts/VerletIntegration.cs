@@ -66,7 +66,7 @@ public class VerletIntegration : MonoBehaviour {
 
     [Header("Line settings")]
     public float startingWidth = 1;
-    public float endWidth = 0.2f;
+    public float endWidth = 0.6f;
 
     private Vector3 gizmoPos = Vector3.zero;
     private List<ColliderPoint> colliderInstances = new List<ColliderPoint>();
@@ -260,8 +260,8 @@ public class VerletIntegration : MonoBehaviour {
 
     private void RecalculateBounds() {
         BoxCollider collider = GetComponent<BoxCollider>();
-        Vector3 dimensionsMax = -1000 * Vector3.zero;
-        Vector3 dimensionsMin = 1000 * Vector3.zero;
+        Vector3 dimensionsMax = -1000 * Vector3.one;
+        Vector3 dimensionsMin = 1000 * Vector3.one;
 
         for (int i = 0; i < simulationPoints.Count; i++) {
             VerletPoint point = simulationPoints[i];
@@ -273,8 +273,6 @@ public class VerletIntegration : MonoBehaviour {
             dimensionsMin.x = Mathf.Min(dimensionsMin.x, point.pos.x);
             dimensionsMin.y = Mathf.Min(dimensionsMin.y, point.pos.y);
             dimensionsMin.z = Mathf.Min(dimensionsMin.z, point.pos.z);
-
-            simulationPoints[i] = point;
         }
 
         collider.center = (dimensionsMax + dimensionsMin) / 2;
