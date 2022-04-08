@@ -54,8 +54,10 @@ public class VerletIntegration : MonoBehaviour {
     public int maxBranchLevels = 3;
     [Tooltip("By what amount to divide the number of points for the next branch")]
     public float branchItemCountHalvingRatio = 2;
+    [Tooltip("The distance between consecutive points of the main branch")]
+    public float intraBranchPointsDistance = 1f;
     [Tooltip("By what amount to increase the distance of side branches relative to their parent")]
-    public float linearDistancingFromParentFactor = 0.2f;
+    public float interBranchLinearDistanceFactor = 0.2f;
     [Tooltip("Initial distance of first child branch point from the parent branch")]
     public float distanceAwayFromParentBranch = 0.2f;
     [Tooltip("Value between 0 and 9 inclusive. Accepts one decimal resolution")]
@@ -76,7 +78,8 @@ public class VerletIntegration : MonoBehaviour {
     private List<BranchPointsInfo> branchPointsInterval;
 
     void Start() {
-        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch, branchingProbability);
+        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio,
+            intraBranchPointsDistance, interBranchLinearDistanceFactor, distanceAwayFromParentBranch, branchingProbability);
         plant.Generate();
         plant.LockPoint(0, transform.position);
 

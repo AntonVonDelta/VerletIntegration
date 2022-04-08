@@ -20,24 +20,26 @@ public class PlantGenerator {
     private int mainBranchSize;
     private int maxBranching;
     private float halvingRatio;
-    private float branchLinearDistanceFactor;
-    public float distanceAwayFromParentBranch;
-    public float branchingProbability;
+    private float intraBranchPointsDistance;
+    private float interBranchLinearDistanceFactor;
+    private float distanceAwayFromParentBranch;
+    private float branchingProbability;
 
     private Branch mainBranch;
     private int uniqueIndex = 0;
 
-    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio, float branchLinearDistanceFactor, float distanceAwayFromParentBranch,float branchingProbability) {
+    public PlantGenerator(int mainBranchSize, int maxBranching, float halvingRatio,float intraBranchPointsDistance, float interBranchLinearDistanceFactor, float distanceAwayFromParentBranch,float branchingProbability) {
         this.mainBranchSize = mainBranchSize;
         this.maxBranching = maxBranching;
         this.halvingRatio = halvingRatio;
-        this.branchLinearDistanceFactor = branchLinearDistanceFactor;
+        this.intraBranchPointsDistance = intraBranchPointsDistance;
+        this.interBranchLinearDistanceFactor = interBranchLinearDistanceFactor;
         this.distanceAwayFromParentBranch = distanceAwayFromParentBranch;
         this.branchingProbability = branchingProbability;
     }
 
     public void Generate() {
-        mainBranch = new Branch(null, uniqueIndex, mainBranchSize);
+        mainBranch = new Branch(null, uniqueIndex, mainBranchSize, intraBranchPointsDistance);
         Queue<Branch> pendingBranches = new Queue<Branch>();
         Queue<Branch> newBranches = new Queue<Branch>();
 
@@ -56,7 +58,7 @@ public class PlantGenerator {
                     int rand = Random.Range(0, 99)/11;  // Use this formula to get more random resolution
                     if (rand < branchingProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
-                        float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
+                        float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(interBranchLinearDistanceFactor, 2));
 
                         // Exclude 0 or 1 item branches
                         if (newBranchNodeCount <= 1) continue;
@@ -69,7 +71,7 @@ public class PlantGenerator {
                         // Add points and constraint lines
                         simulationPoints.AddRange(newBranch.GetVerletPoints());
                         rigidLines.AddRange(newBranch.GetRigidLines());
-                        CrossConnectTwoChains(currentBranch, j, newBranch, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+                        CrossConnectTwoChains(currentBranch, j, newBranch, distanceAwayFromParentBranch, interBranchLinearDistanceFactor);
 
 
                         // Create symetrical branch
@@ -81,13 +83,13 @@ public class PlantGenerator {
                         // Add points and constraint lines
                         simulationPoints.AddRange(newBranch2.GetVerletPoints());
                         rigidLines.AddRange(newBranch2.GetRigidLines());
-                        CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+                        CrossConnectTwoChains(currentBranch, j, newBranch2, distanceAwayFromParentBranch, interBranchLinearDistanceFactor);
 
 
                         // Get the two newly created branches and connect between them to prevent both collapsing
                         // in the same space
                         // We do this by connecting a line between them that keeps them separate
-                        CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, branchLinearDistanceFactor);
+                        CrossConnectTwoSymetricalChains(newBranch, newBranch2, distanceAwayFromParentBranch, interBranchLinearDistanceFactor);
 
 
                         // Move iterator to next possible branching position
