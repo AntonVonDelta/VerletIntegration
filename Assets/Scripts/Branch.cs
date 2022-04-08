@@ -12,6 +12,7 @@ public class Branch {
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<Attachment> childBranches = new List<Attachment>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
+    private int order = 0;
     private Branch parent;
     private int startingNodeIndex = -1;
     private float distance;
@@ -23,12 +24,20 @@ public class Branch {
 
         CreateVerletPoints(nodes);
         ConnectPointsByLines(nodes, distance);
+
+        if (parent != null) {
+            order = parent.GetOrder() + 1;
+        }
     }
 
     public Attachment AddChildBranch(int relativeAttachmentNodeIndex, Branch child) {
         Attachment newAttachment = new Attachment { nodeIndex = startingNodeIndex + relativeAttachmentNodeIndex, childBranch = child };
         childBranches.Add(newAttachment);
         return newAttachment;
+    }
+
+    public int GetOrder() {
+        return order;
     }
 
     public Branch GetParent() {

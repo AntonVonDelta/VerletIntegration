@@ -5,11 +5,17 @@ using static Branch;
 using static VerletIntegration;
 
 public class PlantGenerator {
+    public struct BranchPointsInfo {
+        public int order;
+        public int[] pointsIndexes;
+    }
+
+
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
 
     // This stores the interval of the indexes of points of each branch represented in the main array simulationPoints
-    private List<int[]> branchPointsInterval = new List<int[]>();
+    private List<BranchPointsInfo> branchPointsInterval = new List<BranchPointsInfo>();
 
     private int mainBranchSize;
     private int maxBranching;
@@ -40,18 +46,14 @@ public class PlantGenerator {
         simulationPoints.AddRange(mainBranch.GetVerletPoints());
         rigidLines.AddRange(mainBranch.GetRigidLines());
 
-        // Add indexes for line renderers
-        AddBranchPointsIndexes(mainBranch);
-
         for (int i = 0; i < maxBranching; i++) {
             while (pendingBranches.Count != 0) {
                 Branch currentBranch = pendingBranches.Dequeue();
 
                 for (int j = 0; j < currentBranch.GetNodeCount(); j++) {
                     int rand = Random.Range(0, 9);
-                    float nodeProbability = Mathf.Lerp(0, 9, (float)j / (currentBranch.GetNodeCount() - 1));
 
-                    if (rand < nodeProbability) {
+                    if (rand < 3) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
 
@@ -61,8 +63,6 @@ public class PlantGenerator {
                         Branch newBranch = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
                         Attachment newAttachment = currentBranch.AddChildBranch(j, newBranch);
-                        AddBranchPointsIndexes(newAttachment);
-
                         newBranches.Enqueue(newBranch);
 
                         // Add points and constraint lines
@@ -75,8 +75,6 @@ public class PlantGenerator {
                         Branch newBranch2 = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
                         newAttachment = currentBranch.AddChildBranch(j, newBranch2);
-                        AddBranchPointsIndexes(newAttachment);
-
                         newBranches.Enqueue(newBranch2);
 
                         // Add points and constraint lines
@@ -94,7 +92,7 @@ public class PlantGenerator {
 
 
                         // Move iterator to next possible branching position
-                        j +=Mathf.Max(0, newBranchNodeCount - 4);
+                        j += Mathf.Max(0, newBranchNodeCount - 4);
                     }
                 }
             }
@@ -104,6 +102,7 @@ public class PlantGenerator {
             newBranches = new Queue<Branch>();
         }
 
+        GeneratePointsIndexes();
     }
 
     public void LockPoint(int index, Vector3 position) {
@@ -121,7 +120,7 @@ public class PlantGenerator {
         return rigidLines;
     }
 
-    public List<int[]> GetBranchPointsIntervals() {
+    public List<BranchPointsInfo> GetBranchPointsIntervals() {
         return branchPointsInterval;
     }
 
@@ -177,21 +176,33 @@ public class PlantGenerator {
 
     }
 
-    private void AddBranchPointsIndexes(Attachment attachment) {
+    /// <summary>
+    /// Generates the needed structures for rendering
+    /// </summary>
+    private void GeneratePointsIndexes() {
+        Queue<Attachment> list = new Queue<Attachment>();
+        list.Enqueue(new Attachment { nodeIndex = -1, childBranch = mainBranch });
+
+        while (list.Count != 0) {
+            Attachment current = list.Dequeue();
+            List<Attachment> children = current.childBranch.GetChildBranches();
+
+            for (int i = 0; i < children.Count; i++) {
+                list.Enqueue(children[i]);
+            }
+
+            branchPointsInterval.Add(new BranchPointsInfo { order = current.childBranch.GetOrder(), pointsIndexes = GetPointsIndexes(current) });
+        }
+    }
+
+    private int[] GetPointsIndexes(Attachment attachment) {
         List<int> pointsIndexes = new List<int>();
 
-        pointsIndexes.Add(attachment.nodeIndex);
+        if (attachment.nodeIndex != -1) pointsIndexes.Add(attachment.nodeIndex);
+
         for (int i = 0; i < attachment.childBranch.GetNodeCount(); i++) {
             pointsIndexes.Add(attachment.childBranch.GetStartingNodeIndex() + i);
         }
-        branchPointsInterval.Add(pointsIndexes.ToArray());
-    }
-    private void AddBranchPointsIndexes(Branch branch) {
-        List<int> pointsIndexes = new List<int>();
-
-        for (int i = 0; i < branch.GetNodeCount(); i++) {
-            pointsIndexes.Add(branch.GetStartingNodeIndex() + i);
-        }
-        branchPointsInterval.Add(pointsIndexes.ToArray());
+        return pointsIndexes.ToArray();
     }
 }

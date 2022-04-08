@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PlantGenerator;
 
 public class VerletIntegration : MonoBehaviour {
     public struct VerletPoint {
@@ -49,6 +50,10 @@ public class VerletIntegration : MonoBehaviour {
     public float branchLinearDistanceFactor = 0.2f;     // By what amount to increase the distance of side branches relative to their parent
     public float distanceAwayFromParentBranch = 1;
 
+    [Header("Line settings")]
+    public float startingWidth = 1;
+    public float endWidth = 0.2f;
+
     private Rigidbody playerRb;
     private Vector3 lastPos;
     private Vector3 gizmoPos = Vector3.zero;
@@ -57,7 +62,7 @@ public class VerletIntegration : MonoBehaviour {
     private List<GameObject> lineRenderersParents = new List<GameObject>();
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
     private List<RigidLine> rigidLines = new List<RigidLine>();
-    private List<int[]> branchPointsInterval;
+    private List<BranchPointsInfo> branchPointsInterval;
 
     void Start() {
         playerRb = player.GetComponent<Rigidbody>();
@@ -72,13 +77,16 @@ public class VerletIntegration : MonoBehaviour {
         branchPointsInterval = plant.GetBranchPointsIntervals();
 
         // Create line renderes for each branch
+        float widthChangingRatio = endWidth / startingWidth;
         for (int i = 0; i < branchPointsInterval.Count; i++) {
             GameObject newRenderObject = Instantiate(renderPrefab);
             LineRenderer renderer = newRenderObject.GetComponent<LineRenderer>();
-            renderer.positionCount = branchPointsInterval[i].Length;
+            renderer.positionCount = branchPointsInterval[i].pointsIndexes.Length;
             renderer.material = linesMaterial;
-            renderer.endWidth = 0.2f;
             renderer.generateLightingData = true;
+
+            renderer.startWidth = Mathf.Pow(widthChangingRatio, branchPointsInterval[i].order) * startingWidth;
+            renderer.endWidth = Mathf.Pow(widthChangingRatio, branchPointsInterval[i].order + 1) * startingWidth;
 
             lineRenderersParents.Add(newRenderObject);
         }
@@ -103,8 +111,8 @@ public class VerletIntegration : MonoBehaviour {
         for (int i = 0; i < lineRenderersParents.Count; i++) {
             LineRenderer renderer = lineRenderersParents[i].GetComponent<LineRenderer>();
 
-            for (int j = 0; j < branchPointsInterval[i].Length; j++) {
-                renderer.SetPosition(j, simulationPoints[branchPointsInterval[i][j]].pos);
+            for (int j = 0; j < branchPointsInterval[i].pointsIndexes.Length; j++) {
+                renderer.SetPosition(j, simulationPoints[branchPointsInterval[i].pointsIndexes[j]].pos);
             }
         }
 
