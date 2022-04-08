@@ -275,7 +275,8 @@ public class VerletIntegration : MonoBehaviour {
             dimensionsMin.z = Mathf.Min(dimensionsMin.z, point.pos.z);
         }
 
-        collider.center = (dimensionsMax + dimensionsMin) / 2;
+        // The center and size are defined relative to the gameobject aka they are "added" to its transform
+        collider.center = (dimensionsMax + dimensionsMin) / 2 - gameObject.transform.position;
         collider.size = dimensionsMax - dimensionsMin;
     }
 
