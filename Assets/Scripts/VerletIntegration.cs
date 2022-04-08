@@ -285,7 +285,7 @@ public class VerletIntegration : MonoBehaviour {
 
     private void UpdateColliderInstances() {
         for (int i = 0; i < colliderInstances.Count; i++) {
-            colliderInstances[i].holderObj.transform.position = simulationPoints[i].pos;
+            colliderInstances[i].holderObj.transform.position = simulationPoints[colliderInstances[i].pointIndex].pos;
         }
     }
 
