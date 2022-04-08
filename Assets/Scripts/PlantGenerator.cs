@@ -63,7 +63,7 @@ public class PlantGenerator {
 
                         Branch newBranch = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
-                        Attachment newAttachment = currentBranch.AddChildBranch(j, newBranch);
+                        currentBranch.AddChildBranch(j, newBranch);
                         newBranches.Enqueue(newBranch);
 
                         // Add points and constraint lines
@@ -75,7 +75,7 @@ public class PlantGenerator {
                         // Create symetrical branch
                         Branch newBranch2 = new Branch(currentBranch, uniqueIndex, newBranchNodeCount, branchPointsDistance);
                         uniqueIndex += newBranchNodeCount;
-                        newAttachment = currentBranch.AddChildBranch(j, newBranch2);
+                        currentBranch.AddChildBranch(j, newBranch2);
                         newBranches.Enqueue(newBranch2);
 
                         // Add points and constraint lines
