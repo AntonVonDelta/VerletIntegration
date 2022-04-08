@@ -56,7 +56,7 @@ public class PlantGenerator {
 
                 for (int j = 0; j < currentBranch.GetNodeCount(); j++) {
                     int rand = Random.Range(0, 99)/11;  // Use this formula to get more random resolution
-                    if (rand < branchingProbability) {
+                    if (rand <= branchingProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(interBranchLinearDistanceFactor, 2));
 
