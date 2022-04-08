@@ -538,11 +538,14 @@ MonoBehaviour:
   renderPrefab: {fileID: 4643990815920974259, guid: fd3ca4ab2d607c74b974246ff694df04, type: 3}
   linesMaterial: {fileID: 2100000, guid: e5d45c54bae3cf149a751d3c70eaac61, type: 2}
   drawGizmo: 0
+  showSpheres: 0
   gravity: {x: 0, y: 0.001, z: 0}
   friction: 0.99
   constantJitter: 0.05
   mainBranchPoints: 50
   maxBranchLevels: 3
   branchItemCountHalvingRatio: 2
-  branchLinearDistanceFactor: 0.2
+  linearDistancingFromParentFactor: 0.2
   distanceAwayFromParentBranch: 0.2
+  startingWidth: 1
+  endWidth: 0.6

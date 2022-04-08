@@ -52,8 +52,8 @@ public class PlantGenerator {
 
                 for (int j = 0; j < currentBranch.GetNodeCount(); j++) {
                     int rand = Random.Range(0, 9);
-
-                    if (rand < 3) {
+                    float branchingProbability = Mathf.Lerp(3, 0, (float)i / (maxBranching-1));
+                    if (rand < branchingProbability) {
                         int newBranchNodeCount = Mathf.Min(currentBranch.GetNodeCount() - j - 1, (int)(currentBranch.GetNodeCount() / halvingRatio));
                         float branchPointsDistance = Mathf.Sqrt(Mathf.Pow(currentBranch.GetDistance(), 2) + Mathf.Pow(branchLinearDistanceFactor, 2));
 
@@ -92,7 +92,7 @@ public class PlantGenerator {
 
 
                         // Move iterator to next possible branching position
-                        j += Mathf.Max(0, newBranchNodeCount - 4);
+                        //j += Mathf.Max(0, newBranchNodeCount - 4);
                     }
                 }
             }

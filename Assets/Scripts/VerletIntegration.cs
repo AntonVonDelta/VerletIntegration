@@ -48,7 +48,7 @@ public class VerletIntegration : MonoBehaviour {
     public int mainBranchPoints = 20;
     public int maxBranchLevels = 4;
     [Tooltip("By what amount to divide the number of points for the next branch")]
-    public int branchItemCountHalvingRatio = 2;
+    public float branchItemCountHalvingRatio = 2;
     [Tooltip("By what amount to increase the distance of side branches relative to their parent")]
     public float linearDistancingFromParentFactor = 0.2f;
     [Tooltip("Initial distance of first child branch point from the parent branch")]
