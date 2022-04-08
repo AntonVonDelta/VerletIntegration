@@ -53,6 +53,8 @@ public class VerletIntegration : MonoBehaviour {
     public float linearDistancingFromParentFactor = 0.2f;
     [Tooltip("Initial distance of first child branch point from the parent branch")]
     public float distanceAwayFromParentBranch = 1;
+    [Tooltip("Value between 0 and 9 inclusive. Accepts one decimal resolution")]
+    public float branchingProbability = 4;
 
     [Header("Line settings")]
     public float startingWidth = 1;
@@ -72,7 +74,7 @@ public class VerletIntegration : MonoBehaviour {
         playerRb = player.GetComponent<Rigidbody>();
         lastPos = transform.position;
 
-        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch);
+        PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch, branchingProbability);
         plant.Generate();
         plant.LockPoint(0, new Vector3(0, 1, 0));
 
