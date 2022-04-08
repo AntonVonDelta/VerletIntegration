@@ -645,8 +645,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaec00d0707764a44b0ef73213e95880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spherePrefab: {fileID: 0}
-  lineHolderPrefab: {fileID: 0}
+  spherePrefab: {fileID: 1943070692951463592, guid: 9592c158c2b9987489acd0290fc31164, type: 3}
+  lineHolderPrefab: {fileID: 4643990815920974259, guid: fd3ca4ab2d607c74b974246ff694df04, type: 3}
   linesMaterial: {fileID: 2100000, guid: e5d45c54bae3cf149a751d3c70eaac61, type: 2}
   drawGizmo: 0
   showColliders: 0
