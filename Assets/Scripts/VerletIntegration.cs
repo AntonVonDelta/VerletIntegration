@@ -30,13 +30,12 @@ public class VerletIntegration : MonoBehaviour {
             this.distance = distance;
         }
     }
-
     struct ColliderPoint {
         public int pointIndex;
         public GameObject holderObj;
     }
 
-    public GameObject player;
+
     public GameObject prefab;
     public GameObject renderPrefab;
     public Material linesMaterial;
@@ -46,30 +45,30 @@ public class VerletIntegration : MonoBehaviour {
     public bool showColliders = false;
 
     [Header("Physics settings")]
-    public Vector3 gravity = Vector3.up * 0.01f;
+    public Vector3 gravity = Vector3.up * 0.001f;
     public float friction = 0.99f;
     public float constantJitter = 0.05f;
 
     [Header("Points settings")]
-    public int mainBranchPoints = 20;
-    public int maxBranchLevels = 4;
+    public int mainBranchPoints = 50;
+    public int maxBranchLevels = 3;
     [Tooltip("By what amount to divide the number of points for the next branch")]
     public float branchItemCountHalvingRatio = 2;
     [Tooltip("By what amount to increase the distance of side branches relative to their parent")]
     public float linearDistancingFromParentFactor = 0.2f;
     [Tooltip("Initial distance of first child branch point from the parent branch")]
-    public float distanceAwayFromParentBranch = 1;
+    public float distanceAwayFromParentBranch = 0.2f;
     [Tooltip("Value between 0 and 9 inclusive. Accepts one decimal resolution")]
     public float branchingProbability = 4;
+
+    [Header("Collision settings")]
+    public float maxRayDistance = 0.4f;
 
     [Header("Line settings")]
     public float startingWidth = 1;
     public float endWidth = 0.2f;
 
-    private Rigidbody playerRb;
-    private Vector3 lastPos;
     private Vector3 gizmoPos = Vector3.zero;
-
     private List<ColliderPoint> colliderInstances = new List<ColliderPoint>();
     private List<GameObject> lineRenderersParents = new List<GameObject>();
     private List<VerletPoint> simulationPoints = new List<VerletPoint>();
@@ -77,9 +76,6 @@ public class VerletIntegration : MonoBehaviour {
     private List<BranchPointsInfo> branchPointsInterval;
 
     void Start() {
-        playerRb = player.GetComponent<Rigidbody>();
-        lastPos = transform.position;
-
         PlantGenerator plant = new PlantGenerator(mainBranchPoints, maxBranchLevels, branchItemCountHalvingRatio, linearDistancingFromParentFactor, distanceAwayFromParentBranch, branchingProbability);
         plant.Generate();
         plant.LockPoint(0, transform.position);
@@ -150,37 +146,34 @@ public class VerletIntegration : MonoBehaviour {
 
     private void OnTriggerStay(Collider other) {
         for (int i = 0; i < colliderInstances.Count; i++) {
-            Vector3 direction = Vector3.up;
-            float radius = colliderInstances[i].holderObj.transform.localScale.x;
-            float maxDistance = 1f;
-
             // Can't use OverlapSphere because that method does not release normal and hit point information
             //if (Physics.SphereCast(instantiated[i].transform.position, radius, direction, out hit, maxDistance)) {
             //    gizmoPos = hit.point;
             //}
 
-            Collider[] colliders = Physics.OverlapSphere(colliderInstances[i].holderObj.transform.position, radius);
-            for (int j = 0; j < colliders.Length; j++) {
-                // Do not interact with the containing object collider
-                if (colliders[j].gameObject == gameObject) continue;
+            // ClosestPoint works only with convex colliders - as noted on https://docs.unity3d.com/ScriptReference/Physics.ClosestPoint.html
+            // ComputePenetration only works with convex colliders
 
-                // Get closest point on the aproaching surface
-                Vector3 closestPoint = colliders[j].ClosestPoint(colliderInstances[i].holderObj.transform.position);
+            //if (Physics.ComputePenetration()) {
 
-                if ((closestPoint - colliderInstances[i].holderObj.transform.position).sqrMagnitude < Mathf.Epsilon) {
-                    // The trigger point is inside the collider
-                } else {
-                    // Cast an ray in order to get normal and other information
-                    Ray ray = new Ray(colliderInstances[i].holderObj.transform.position, closestPoint - colliderInstances[i].holderObj.transform.position);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, maxDistance)) {
-                        gizmoPos = hit.point;
+            //}
 
-                        // Use this information to push points back
-                        VerletPoint point = simulationPoints[colliderInstances[i].pointIndex];
-                        point.pos += hit.normal * maxDistance;
-                        simulationPoints[colliderInstances[i].pointIndex] = point;
-                    }
+            // Get closest point on the aproaching surface
+            Vector3 closestPoint = other.ClosestPoint(colliderInstances[i].holderObj.transform.position);
+
+            if ((closestPoint - colliderInstances[i].holderObj.transform.position).sqrMagnitude < Mathf.Epsilon) {
+                // The trigger point is inside the collider
+            } else {
+                // Cast an ray in order to get normal and other information
+                Ray ray = new Ray(colliderInstances[i].holderObj.transform.position, closestPoint - colliderInstances[i].holderObj.transform.position);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, maxRayDistance)) {
+                    gizmoPos = hit.point;
+
+                    // Use this information to push points back
+                    VerletPoint point = simulationPoints[colliderInstances[i].pointIndex];
+                    point.pos += hit.normal * maxRayDistance;
+                    simulationPoints[colliderInstances[i].pointIndex] = point;
                 }
             }
         }
