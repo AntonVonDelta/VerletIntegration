@@ -36,8 +36,8 @@ public class VerletIntegration : MonoBehaviour {
     }
 
 
-    public GameObject prefab;
-    public GameObject renderPrefab;
+    public GameObject spherePrefab;
+    public GameObject lineHolderPrefab;
     public Material linesMaterial;
     public bool drawGizmo = true;
 
@@ -87,7 +87,7 @@ public class VerletIntegration : MonoBehaviour {
         // Create line renderes for each branch
         float widthChangingRatio = endWidth / startingWidth;
         for (int i = 0; i < branchPointsInterval.Count; i++) {
-            GameObject newRenderObject = Instantiate(renderPrefab);
+            GameObject newRenderObject = Instantiate(lineHolderPrefab);
             LineRenderer renderer = newRenderObject.GetComponent<LineRenderer>();
             renderer.positionCount = branchPointsInterval[i].pointsIndexes.Length;
             renderer.material = linesMaterial;
@@ -249,7 +249,7 @@ public class VerletIntegration : MonoBehaviour {
             // Do not create collider "instances" for locked points because they cannot be moved
             if (simulationPoints[i].locked) continue;
 
-            GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
+            GameObject newReferenceObject = Instantiate(spherePrefab, simulationPoints[i].pos, Quaternion.identity);
             newReferenceObject.name = $"Sphere {i}";
 
             colliderInstances.Add(new ColliderPoint { pointIndex = i, holderObj = newReferenceObject });
