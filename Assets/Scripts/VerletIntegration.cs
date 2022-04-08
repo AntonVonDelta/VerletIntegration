@@ -152,7 +152,7 @@ public class VerletIntegration : MonoBehaviour {
         for (int i = 0; i < colliderInstances.Count; i++) {
             Vector3 direction = Vector3.up;
             float radius = colliderInstances[i].holderObj.transform.localScale.x;
-            float maxDistance = 1.2f;
+            float maxDistance = 1f;
 
             // Can't use OverlapSphere because that method does not release normal and hit point information
             //if (Physics.SphereCast(instantiated[i].transform.position, radius, direction, out hit, maxDistance)) {
@@ -178,7 +178,8 @@ public class VerletIntegration : MonoBehaviour {
 
                         // Use this information to push points back
                         VerletPoint point = simulationPoints[colliderInstances[i].pointIndex];
-                        point.pos += hit.normal * 2 * maxDistance;
+                        point.pos += hit.normal * maxDistance;
+                        simulationPoints[colliderInstances[i].pointIndex] = point;
                     }
                 }
             }
@@ -264,7 +265,6 @@ public class VerletIntegration : MonoBehaviour {
             GameObject newReferenceObject = Instantiate(prefab, simulationPoints[i].pos, Quaternion.identity);
             newReferenceObject.name = $"Sphere {i}";
 
-            newReferenceObject.SetActive(false);
             colliderInstances.Add(new ColliderPoint { pointIndex = i, holderObj = newReferenceObject });
         }
     }
