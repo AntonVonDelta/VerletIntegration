@@ -238,8 +238,6 @@ public class VerletIntegration : MonoBehaviour {
             Vector3 dVec = point.pos - point.oldPos;
 
 
-
-
             simulationPoints[i] = point;
         }
     }
@@ -250,6 +248,10 @@ public class VerletIntegration : MonoBehaviour {
             if (simulationPoints[i].locked) continue;
 
             GameObject newReferenceObject = Instantiate(spherePrefab, simulationPoints[i].pos, Quaternion.identity);
+            MeshRenderer renderer = newReferenceObject.GetComponent<MeshRenderer>();
+
+            // Initial values
+            renderer.enabled = showColliders;
             newReferenceObject.name = $"Sphere {i}";
 
             colliderInstances.Add(new ColliderPoint { pointIndex = i, holderObj = newReferenceObject });
